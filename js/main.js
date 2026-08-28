@@ -214,7 +214,14 @@ function runItem(step, rawItem, meta) {
   ui.setPrompt(item.prompt || '', { badge: item.hideBadge ? null : badge });
   state.canvas.clear();
   state.canvas.drawGrid();
-  return new Promise(resolve => handler(step, item, meta, resolve));
+  return new Promise(resolve => {
+    handler(step, item, meta, resolve);
+    // 移動の様子を見せるアニメーション。どの type でも item.path / item.paths で使える。
+    const paths = item.paths || (item.path ? [item.path] : []);
+    for (const path of paths) {
+      if (path && path.length > 1) animatePath(state.canvas, path, { line: item.pathLine !== false });
+    }
+  });
 }
 
 /* ---------- 誤答フィードバックの取り出し ---------- */
@@ -266,7 +273,7 @@ function readoutItems(scene, item, prev = {}) {
 }
 
 /** ぐねぐねした道筋のアニメーション（同じ2点間なら道筋が違っても同じ矢印になる、を見せる） */
-function animatePath(canvas, path) {
+function animatePath(canvas, path, opts = {}) {
   const pts = path.map(p => canvas.toScreen(p));
   const d = pts.map((p, i) => `${i ? 'L' : 'M'} ${p.x} ${p.y}`).join(' ');
   const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -275,6 +282,7 @@ function animatePath(canvas, path) {
   line.setAttribute('stroke', '#b6c0cb');
   line.setAttribute('stroke-width', '0.07');
   line.setAttribute('stroke-dasharray', '0.14 0.16');
+  if (opts.line === false) line.setAttribute('stroke', 'transparent');
   canvas.layers.guide.appendChild(line);
   const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
   dot.setAttribute('r', '0.16');
@@ -302,7 +310,6 @@ HANDLERS['draw-vector'] = (step, item, meta, done) => {
   const scene = buildScene(item.scene || { points: {}, vectors: [] });
   if (item.origin) canvas.drawPoint(item.origin, { label: item.origin.label, role: 'origin', ring: true });
   for (const lm of (item.landmarks || [])) canvas.drawPoint(lm, { label: lm.label });
-  if (item.path && item.path.length > 1) animatePath(canvas, item.path);
 
   let attempts = 0;
   let answerShown = false;
@@ -448,14 +455,19 @@ HANDLERS['explore-drag'] = (step, item, meta, done) => {
     ui.setReadout(readoutItems(sceneRef, item, prev));
   };
 
-  const progressText = () => {
+  // 画面に出す文言は problems.js の item.progress に置く（コードにベタ書きしない）
+  const P = item.progress || {};
+  let lastDragged = null;
+
+  const statusText = (ok) => {
+    if (ok) return P.done || 'すべて確かめられました。';
     if (req.kind === 'eachDragged') {
-      const left = (req.ids || []).filter(id => !dragged.has(id));
-      return left.length ? `あと ${left.length} つ、動かしてみましょう。` : 'どちらも動かせました。';
+      const left = (req.ids || []).filter(id => !dragged.has(id)).length;
+      return (P.remaining || 'あと {n} つ、動かしてみましょう。').replace('{n}', left);
     }
     if (req.kind === 'distinctPositions') {
       const left = Math.max(0, (req.count || 3) - visited.size);
-      return left ? `基準点Oを あと ${left} か所 に動かしてみましょう。` : '3か所以上に動かせました。';
+      return (P.remaining || 'あと {n} か所、動かしてみましょう。').replace('{n}', left);
     }
     return '';
   };
@@ -465,7 +477,10 @@ HANDLERS['explore-drag'] = (step, item, meta, done) => {
     if (req.kind === 'eachDragged') ok = (req.ids || []).every(id => dragged.has(id));
     if (req.kind === 'distinctPositions') ok = visited.size >= (req.count || 3);
     ui.setActionState('next', { disabled: !ok });
-    ui.feedback(progressText(), ok ? 'correct' : 'info');
+    // 直前に動かしたものへの個別のことば（「戻ってしまいましたね」「そのまま置けましたね」）を先に出す
+    const own = lastDragged && P.dragged ? P.dragged[lastDragged] : null;
+    const status = statusText(ok);
+    ui.feedback([own, status].filter(Boolean).join('<br>'), ok ? 'correct' : 'info');
     return ok;
   };
 
@@ -473,9 +488,9 @@ HANDLERS['explore-drag'] = (step, item, meta, done) => {
     onChange: (e) => {
       if (e.phase === 'move' || e.phase === 'end') updateReadout();
       if (e.phase === 'end') {
-        if (e.type === 'vector' && e.moved) dragged.add(e.id);
+        if (e.type === 'vector' && e.moved) { dragged.add(e.id); lastDragged = e.id; }
         if (e.type === 'point') {
-          dragged.add(e.id);
+          dragged.add(e.id); lastDragged = e.id;
           if (req.point === e.id || !req.point) visited.add(`${e.value.x},${e.value.y}`);
         }
         checkDone();

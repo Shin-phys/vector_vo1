@@ -297,6 +297,9 @@ export class Scene {
     c.clear('static', 'points', 'guide', 'overlay');
     this.arrows = {};
     this.handles = [];
+    const lockDrawn = new Set();          // 同じ始点に錠前を重ねて描かない
+    const first = !this._rendered;
+    this._rendered = true;
 
     for (const g of (this.decl.guides || [])) {
       c.drawGuideLine(this.point(g.from), this.point(g.to));
@@ -311,9 +314,17 @@ export class Scene {
       });
       arrow.set(ends.from, ends.to);
       this.arrows[v.id] = arrow;
+      // 登場アニメーション（③で「あとから継ぎ足した」と見せるため）。初回描画のみ。
+      if (first && v.appearDelay) {
+        arrow.g.style.animation = `revealin .5s ease-out ${v.appearDelay}s both`;
+      }
       const locked = v.locked ?? (VECTOR_STYLES[v.style] || {}).locked;
       if (locked) {
-        arrow.lockIcon = c.drawLock(ends.from, { layer: 'overlay' });
+        const key = `${ends.from.x},${ends.from.y}`;
+        if (!lockDrawn.has(key)) {
+          lockDrawn.add(key);
+          arrow.lockIcon = c.drawLock(ends.from, { layer: 'overlay' });
+        }
       }
       if (v.draggable) {
         arrow.hit.style.cursor = 'grab';
@@ -458,6 +469,13 @@ export const CONDITIONS = {
     const vb = V.sub(scene.point(b[1]), scene.point(b[0]));
     const okLen = V.len(va) >= (cfg.minLength ?? 1);
     return { ok: okLen && V.same(va, vb, 1e-6), va, vb, reason: !okLen ? 'tooShort' : null };
+  },
+  /** 2本目の矢印の始点が、1本目の矢印の終点に重なっているか（③の「継ぎ足す」） */
+  vectorsConnected(scene, cfg) {
+    const [a, b] = cfg.of;
+    const ea = scene.vectorEnds(a), eb = scene.vectorEnds(b);
+    const d = V.dist(ea.to, eb.from);
+    return { ok: d <= (cfg.tolerance ?? 0.01), distance: d };
   },
   /** 2つの出発点が離れているか（課題2で「離れた場所」を担保する） */
   pointsApart(scene, cfg) {

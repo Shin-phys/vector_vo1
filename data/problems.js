@@ -157,14 +157,14 @@ export const problems = {
     passLine: { correct: 4, of: 4 },
     scaleLabel: '1マス = 1 km',
     intro: {
-      title: '矢印は、置き直してよいのだろうか',
-      body: '<p>画面には <b>位置ベクトル</b>（学校→駅）と <b>変位ベクトル</b>（駅→公園）があります。</p><p>どちらも指でつかんで動かせます。動かすと何が起きるか、両方ためしてみましょう。</p>'
+      title: 'その矢印は、何を言っている矢印？',
+      body: '<p>画面に2本の矢印があります。動かす前に、それぞれが何を言っている矢印なのか、声に出して言ってみましょう。</p><ul><li><b>位置ベクトル</b>（学校→駅）…「駅は、学校から東に3・北に1のところにある」</li><li><b>変位ベクトル</b>（駅→公園）…「駅から公園へ、西に5・北に2動いた」</li></ul><p>そのうえで動かして、<b>いま言った文がまだ言えるか</b>を確かめます。</p>'
     },
     items: [
       {
         id: 's25a-t1',
         type: 'explore-drag',
-        prompt: '課題1｜2本の矢印を<b>それぞれ動かして</b>みよう。動かすと何が変わるだろう。',
+        prompt: '課題1｜2本の矢印を<b>それぞれ動かして</b>みよう。動かしたあと、さっき言った文はまだ言えますか。',
         unit: 'km',
         scene: {
           points: {
@@ -173,19 +173,28 @@ export const problems = {
             park:    { ...MAP.park }
           },
           vectors: [
-            { id: 'pos',  from: 'school',  to: 'station', style: 'position',     locked: true,  draggable: true, showTipLabel: true },
-            { id: 'disp', from: 'station', to: 'park',    style: 'displacement', locked: false, draggable: true }
+            { id: 'pos',  from: 'school',  to: 'station', style: 'position',     locked: true,  draggable: true, showTipLabel: true, label: '位置ベクトル' },
+            { id: 'disp', from: 'station', to: 'park',    style: 'displacement', locked: false, draggable: true, label: '変位ベクトル' }
           ]
         },
         readouts: [
-          { id: 'pos',  label: '位置ベクトルの先が指す場所', vector: 'pos',  show: 'tip', watch: true },
-          { id: 'disp', label: '変位ベクトルの成分',         vector: 'disp', watch: true, unchangedBadge: true }
+          { id: 'postip', label: '位置ベクトルの先が指す場所', vector: 'pos',  show: 'tip', watch: true },
+          { id: 'poscmp', label: '位置ベクトルの成分',         vector: 'pos',  watch: true, unchangedBadge: true },
+          { id: 'disp',   label: '変位ベクトルの成分',         vector: 'disp', watch: true, unchangedBadge: true }
         ],
         requirement: { kind: 'eachDragged', ids: ['pos', 'disp'] },
+        progress: {
+          dragged: {
+            pos:  '<b>位置ベクトル</b>：動かせましたが、手を離すと元に戻ってしまいましたね。動かしているあいだ、矢印の先は「駅」を指していませんでした。',
+            disp: '<b>変位ベクトル</b>：動かした場所に、そのまま置いておけましたね。しかも「西へ5・北へ2」は変わっていません。'
+          },
+          remaining: 'あと {n} 本、動かしてみましょう。',
+          done: '2本とも試せました。でも、<b>起きたことは同じではありません</b>でしたね。'
+        },
         hints: ['まず 🔒 のついた矢印（学校→駅）をつかんで動かしてみましょう。'],
         reveal: {
-          title: '気づいたこと',
-          body: '<p>位置ベクトルを動かすと、先が指す場所がどんどん変わってしまいました。指を離すと元に戻ります。</p><p>変位ベクトルを動かしても、成分（東へ何、北へ何）は変わりませんでした。</p>'
+          title: '長さも向きも変わっていないのに',
+          body: '<p>数字を見ると、<b>どちらの矢印も成分は変わっていません</b>。長さも向きもそのままです。</p><p>それでも位置ベクトルだけは元に戻ります。変わってしまったのは数字ではなく、<b>その矢印が言えていたこと</b>のほうです。</p>'
         }
       },
       {
@@ -193,23 +202,46 @@ export const problems = {
         type: 'choice',
         prompt: '課題1のつづき',
         question: '位置ベクトルを平行移動すると、何が言えなくなりますか？',
-        showCanvas: false,
+        scene: {
+          points: {
+            school:  { ...MAP.school,  role: 'origin' },
+            station: { ...MAP.station },
+            park:    { ...MAP.park }
+          },
+          vectors: [
+            { id: 'pos',  from: 'school',  to: 'station', style: 'position',     locked: true, label: '位置ベクトル' },
+            { id: 'disp', from: 'station', to: 'park',    style: 'displacement', label: '変位ベクトル' }
+          ]
+        },
         options: [
-          { key: 'ア', text: '矢印の長さがわからなくなる', feedback: '長さは動かしても変わりませんでした。もう一度考えてみましょう。' },
-          { key: 'イ', text: '矢印の向きがわからなくなる', feedback: '向きも動かしても変わりませんでした。変わってしまったのは何でしたか？' },
+          { key: 'ア', text: '矢印の長さがわからなくなる', feedback: '長さは動かしても変わりませんでした。数値表示でも「変化なし」でしたね。' },
+          { key: 'イ', text: '矢印の向きがわからなくなる', feedback: '向きも変わりませんでした。では、変わってしまったのは何でしたか？' },
           { key: 'ウ', text: 'どの地点を指しているのかがわからなくなる' },
-          { key: 'エ', text: '何も困らない', feedback: '先が指す場所が「駅」から「なにもない場所」に変わってしまいました。困りませんか？' }
+          { key: 'エ', text: '何も困らない', feedback: '「駅は学校から東3・北1にある」——この文がもう言えません。困りませんか？' }
         ],
         correctIndex: 2,
-        correctText: 'そのとおり。位置ベクトルは「基準から見てどこか」を表すので、置き場所を変えると意味が壊れます。',
-        explanation: '位置ベクトルは、基準点から出ていることに意味があります。動かすと「どの地点か」がわからなくなります。'
+        correctText: 'そのとおり。位置ベクトルは「基準から見てどこか」を言う矢印なので、置き場所を変えると言えなくなります。',
+        explanation: '位置ベクトルは、基準点から出ていることに意味があります。動かすと「どの地点か」が言えなくなります。'
       },
       {
         id: 's25a-t2',
         type: 'choice',
-        prompt: '課題2｜考えてみよう',
-        question: '離れた場所にいる2つの物体が、それぞれ別の点へ移動しました。2つの変位が等しいことはあり得ますか？',
-        showCanvas: false,
+        prompt: '課題2｜2つの物体が、それぞれ別の点へ移動しました。',
+        question: '離れた場所にいる2つの物体の変位が、<b>等しくなる</b>ことはあり得ますか？',
+        scene: {
+          points: {
+            a1: { x: 1, y: 1, label: '物体A 出発' },
+            a2: { x: 3, y: 2, label: 'A 到着' },
+            b1: { x: 5, y: 5, label: '物体B 出発' },
+            b2: { x: 6, y: 7, label: 'B 到着' }
+          },
+          vectors: [
+            { id: 'va', from: 'a1', to: 'a2', style: 'displacement', label: 'Aの変位' },
+            { id: 'vb', from: 'b1', to: 'b2', style: 'displacement', label: 'Bの変位' }
+          ]
+        },
+        paths: [[{ x: 1, y: 1 }, { x: 3, y: 2 }], [{ x: 5, y: 5 }, { x: 6, y: 7 }]],
+        pathLine: false,
         options: [
           { key: 'ア', text: 'あり得る' },
           { key: 'イ', text: 'あり得ない', feedback: '本当にそうでしょうか。次の画面で、自分で作れるか試してみましょう。' }
@@ -221,7 +253,7 @@ export const problems = {
       {
         id: 's25a-t2b',
         type: 'free-place',
-        prompt: '課題2｜4つの点を動かして、<b>2つの変位を等しく</b>してみよう。',
+        prompt: '課題2｜4つの点を動かして、<b>2つの変位を等しく</b>してみよう。（出発点は離したままで大丈夫です）',
         unit: 'km',
         scene: {
           points: {
@@ -231,8 +263,8 @@ export const problems = {
             b2: { x: 6, y: 7, label: 'B 到着',   draggable: true }
           },
           vectors: [
-            { id: 'va', from: 'a1', to: 'a2', style: 'displacement' },
-            { id: 'vb', from: 'b1', to: 'b2', style: 'displacement' }
+            { id: 'va', from: 'a1', to: 'a2', style: 'displacement', label: 'Aの変位' },
+            { id: 'vb', from: 'b1', to: 'b2', style: 'displacement', label: 'Bの変位' }
           ]
         },
         readouts: [
@@ -245,12 +277,12 @@ export const problems = {
         ],
         animation: 'parallelMove',
         animatePairs: [['a1', 'a2'], ['b1', 'b2']],
-        hintText: '2つの矢印の「東へ何・北へ何」をそろえてみましょう。出発点は離したままで大丈夫です。',
+        hintText: '2つの矢印の「東へ何・北へ何」をそろえてみましょう。',
         successText: '離れた場所にいても、2つの変位を等しくできました。',
         hints: ['まず片方の矢印の成分を読み取り、もう片方を同じ成分にしてみましょう。'],
         reveal: {
           title: '🔒 のルール',
-          body: '<ul><li><b>位置ベクトル</b>＝置き直すと意味が壊れる（🔒 がつく）</li><li><b>変位ベクトル</b>＝置き直してよい</li></ul><p>これから先も、🔒 のついた矢印は動かしても元に戻ります。</p>'
+          body: '<ul><li><b>位置ベクトル</b>＝どこから出ているかに意味がある。置き直すと言えなくなる（🔒 がつく）</li><li><b>変位ベクトル</b>＝向きと大きさだけを言っている。どこに置いてもよい</li></ul><p>これから先も、🔒 のついた矢印は動かしても元に戻ります。</p>'
         }
       }
     ]
@@ -271,7 +303,7 @@ export const problems = {
       {
         id: 's25b-t3',
         type: 'explore-drag',
-        prompt: '課題3｜<b>基準点 O をドラッグ</b>して、3か所以上に動かしてみよう。何が変わって、何が変わらないだろう。',
+        prompt: '課題3｜人が駅から公園へ移動しました。<b>基準点 O をドラッグ</b>して、3か所以上に動かしてみよう。',
         unit: 'km',
         scene: {
           points: {
@@ -280,20 +312,27 @@ export const problems = {
             park:    { ...MAP.park }
           },
           vectors: [
-            { id: 'pos',  from: 'O',       to: 'station', style: 'position',     locked: true },
-            { id: 'disp', from: 'station', to: 'park',    style: 'displacement', locked: false }
+            { id: 'pos1', from: 'O',       to: 'station', style: 'position',     locked: true,  label: 'O→駅' },
+            { id: 'pos2', from: 'O',       to: 'park',    style: 'position',     locked: true,  label: 'O→公園' },
+            { id: 'disp', from: 'station', to: 'park',    style: 'displacement', locked: false, label: '駅→公園' }
           ]
         },
+        paths: [[{ x: 6, y: 4 }, { x: 1, y: 6 }]],
+        pathLine: false,
         readouts: [
-          { id: 'pos',  label: '位置ベクトル O→駅',     vector: 'pos',  watch: true },
-          { id: 'posm', label: '　　　　　　の大きさ',   vector: 'pos',  show: 'magnitude', watch: true },
-          { id: 'disp', label: '変位ベクトル 駅→公園',   vector: 'disp', watch: true, unchangedBadge: true }
+          { id: 'pos1', label: '位置ベクトル O→駅',   vector: 'pos1', watch: true },
+          { id: 'pos2', label: '位置ベクトル O→公園', vector: 'pos2', watch: true },
+          { id: 'disp', label: '変位ベクトル 駅→公園', vector: 'disp', watch: true, unchangedBadge: true }
         ],
         requirement: { kind: 'distinctPositions', point: 'O', count: 3 },
+        progress: {
+          remaining: '基準点Oを あと {n} か所 に動かしてみましょう。上の2つと下の1つ、どちらが赤く光りますか。',
+          done: '2本の位置ベクトルは<b>2本とも</b>変わりました。変位ベクトルだけが変わりませんでしたね。'
+        },
         hints: ['数値表示を見ながら O を動かしましょう。赤く光った数と、「変化なし」の数があります。'],
         reveal: {
-          title: '見えたこと',
-          body: '<p>基準点 O を動かすと、<b>位置ベクトルは長さも向きも変わりました</b>。</p><p>いっぽう <b>変位ベクトルはまったく変わりませんでした</b>。</p>'
+          title: '2本が、同じだけずれている',
+          body: '<p>O を動かすと、O→駅 と O→公園 の<b>2本が同じだけずれます</b>。</p><p>変位は、その2本の<b>先端どうしを結んだ矢印</b>です。2本が同じだけずれるのだから、結んだ矢印は動きません。</p>'
         }
       },
       {
@@ -301,16 +340,27 @@ export const problems = {
         type: 'choice',
         prompt: 'なぜ変位は変わらないのだろう',
         question: '基準点 O を動かしても変位ベクトルが変わらないのは、なぜですか？',
-        showCanvas: false,
+        scene: {
+          points: {
+            O:       { x: 3, y: 3, label: '基準点 O', role: 'origin' },
+            station: { ...MAP.station },
+            park:    { ...MAP.park }
+          },
+          vectors: [
+            { id: 'pos1', from: 'O',       to: 'station', style: 'position',     locked: true, label: 'O→駅' },
+            { id: 'pos2', from: 'O',       to: 'park',    style: 'position',     locked: true, label: 'O→公園' },
+            { id: 'disp', from: 'station', to: 'park',    style: 'displacement', label: '駅→公園' }
+          ]
+        },
         options: [
-          { key: 'ア', text: '変位は長さが決まっているから', feedback: '長さが決まっているのは結果です。なぜ決まるのか、を考えてみましょう。' },
-          { key: 'イ', text: '変位は2点の位置の差なので、共通の基準がなくなるから' },
-          { key: 'ウ', text: '変位は基準点と関係ない場所にあるから', feedback: '場所の問題ではありません。2つの位置ベクトルの関係を思い出しましょう。' },
-          { key: 'エ', text: 'たまたま変わらなかっただけ', feedback: '3か所以上動かしても変わりませんでした。偶然ではなさそうです。' }
+          { key: 'ア', text: '変位は長さも向きも決まっている量なので、基準を動かしても変わらないから', feedback: '「決まっている」のは結果です。なぜ決まるのか、画面で起きたことから考えてみましょう。' },
+          { key: 'イ', text: '基準を動かすと2本の位置ベクトルが同じだけずれるので、その差は変わらないから' },
+          { key: 'ウ', text: '変位は基準点から離れた場所にあるので、基準の影響を受けないから', feedback: '場所の遠さの問題ではありません。O を駅のすぐ隣に置いても変位は変わりませんでした。' },
+          { key: 'エ', text: '今回はたまたま変わらなかっただけで、いつも変わらないとは限らないから', feedback: '3か所以上動かしても変わりませんでした。偶然ではなさそうです。' }
         ],
         correctIndex: 1,
-        correctText: 'そのとおり。変位は「到着点の位置ベクトル − 出発点の位置ベクトル」なので、共通の基準は引き算で消えてしまいます。',
-        explanation: '変位は2点の位置の差です。どちらの位置ベクトルにも同じ基準が入っているので、差をとると基準が消えます。',
+        correctText: 'そのとおり。O→駅 と O→公園 が同じだけずれるので、その先端どうしを結んだ変位は動きません。',
+        explanation: '変位は2本の位置ベクトルの差です。基準を動かすと2本とも同じだけずれるので、差は変わりません。',
         reveal: {
           title: '次の時間の予告',
           body: '<p>基準を取り替えるという考え方は、<b>次の時間にもう一度出てきます</b>。</p>'
@@ -323,13 +373,42 @@ export const problems = {
   step3: {
     title: '変位をつなぐ',
     minutes: 5,
-    passLine: { correct: 1, of: 2 },
+    passLine: { correct: 2, of: 3 },
     scaleLabel: '1マス = 1 km',
     items: [
       {
+        id: 's3join',
+        type: 'free-place',
+        prompt: '課題｜離れた場所にある <b>② の矢印をドラッグして、① の矢印の先端に継ぎ足そう</b>。',
+        unit: 'km',
+        scene: {
+          points: {
+            A: { x: 1, y: 1, label: 'スタート' },
+            B: { x: 4, y: 1, label: '' },
+            C: { x: 6, y: 3, label: '' },
+            D: { x: 6, y: 7, label: '' }
+          },
+          vectors: [
+            { id: 'l1', from: 'A', to: 'B', style: 'displacement', label: '① 東へ3' },
+            { id: 'l2', from: 'C', to: 'D', style: 'displacement', label: '② 北へ4', draggable: true, locked: false }
+          ]
+        },
+        readouts: [
+          { id: 'l2', label: '② の成分', vector: 'l2', watch: true, unchangedBadge: true }
+        ],
+        conditions: [{ kind: 'vectorsConnected', of: ['l1', 'l2'] }],
+        hintText: '② の矢印をつかんで、① の矢印の先端まで運びましょう。運んでも成分は変わりません。',
+        successText: '① の先端に ② を継ぎ足せました。',
+        hints: ['②.5a でやったとおり、変位ベクトルは置き直してよい矢印です。'],
+        reveal: {
+          title: 'なぜ運んでよいのか',
+          body: '<p>②.5a で確かめたとおり、<b>変位は置き直してよい矢印</b>でした。だから2本目を1本目の先端まで運んできて、継ぎ足すことができます。</p>'
+        }
+      },
+      {
         id: 's3q1',
         type: 'draw-vector',
-        prompt: '東へ 3 進み、つづけて北へ 4 進んだ。<b>最初の点から最後の点への矢印</b>を描こう。',
+        prompt: 'いま継ぎ足した2本について、<b>最初の点から最後の点への矢印</b>を描こう。',
         style: 'displacement',
         unit: 'km',
         scene: {
@@ -339,8 +418,8 @@ export const problems = {
             C: { x: 4, y: 5, label: 'ゴール' }
           },
           vectors: [
-            { id: 'l1', from: 'A', to: 'B', style: 'displacement', label: '東へ3' },
-            { id: 'l2', from: 'B', to: 'C', style: 'displacement', label: '北へ4' }
+            { id: 'l1', from: 'A', to: 'B', style: 'displacement', label: '① 東へ3', appearDelay: 0.2 },
+            { id: 'l2', from: 'B', to: 'C', style: 'displacement', label: '② 北へ4', appearDelay: 1.0 }
           ]
         },
         answer: {
@@ -356,13 +435,13 @@ export const problems = {
         explanation: '2本の矢印を継ぎ足したとき、最初の点から最後の点へ引いた矢印が答えです。長さは 7 ではなく 5 になります。',
         reveal: {
           title: 'これが「ベクトルの和」です',
-          body: '<p>矢印を継ぎ足して、最初から最後へ引く操作を <b>和</b> といいます。</p><p>②.5a で確かめたとおり、変位は置き直してよいので、2本目を1本目の先端まで持ってきて継ぎ足せます。</p>'
+          body: '<p>矢印を継ぎ足して、最初から最後へ引く操作を <b>和</b> といいます。</p><p>いま自分の手で2本目を運んで継ぎ足したとおり、変位は置き直してよいので、この操作がいつでもできます。</p>'
         }
       },
       {
         id: 's3q2',
         type: 'draw-vector',
-        prompt: '今度は 3 つ続けて動いた。同じように<b>最初から最後への矢印</b>を描こう。',
+        prompt: '別の例です。今度は3つ続けて動きました。同じように<b>最初から最後への矢印</b>を描こう。',
         style: 'displacement',
         unit: 'km',
         scene: {
@@ -373,9 +452,9 @@ export const problems = {
             D: { x: 2, y: 4, label: 'ゴール' }
           },
           vectors: [
-            { id: 'l1', from: 'A', to: 'B', style: 'displacement', label: '東へ4' },
-            { id: 'l2', from: 'B', to: 'C', style: 'displacement', label: '北へ3' },
-            { id: 'l3', from: 'C', to: 'D', style: 'displacement', label: '西へ3' }
+            { id: 'l1', from: 'A', to: 'B', style: 'displacement', label: '① 東へ4', appearDelay: 0.2 },
+            { id: 'l2', from: 'B', to: 'C', style: 'displacement', label: '② 北へ3', appearDelay: 0.9 },
+            { id: 'l3', from: 'C', to: 'D', style: 'displacement', label: '③ 西へ3', appearDelay: 1.6 }
           ]
         },
         answer: {

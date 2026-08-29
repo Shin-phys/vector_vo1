@@ -2,7 +2,7 @@
 // 1つのビューを描画する。world と camera（frame）を受け取って SVG を描くだけ。
 // 運動の計算も基準系の判断もここではしない。
 
-import { GridCanvas, svgEl } from '../core/canvas.js';
+import { WorldCanvas, svgEl } from '../core/canvas.js';
 import { Arrow } from '../core/vector.js';
 import { COLORS, CANVAS, VECTOR_STYLES, RELATIVE_STYLES } from '../../data/config.js';
 import { transform, applyOffset, frameLabel } from './camera.js';
@@ -13,107 +13,16 @@ import { add, len, isZero, velocityText } from './world.js';
    core/vector.js の Arrow / DrawTool がそのまま使えるよう、
    toScreen / fromClient / snap / layers / pxToUnits の約束は変えない。
    ========================================================================= */
-export class WorldCanvas extends GridCanvas {
-  constructor(host, opts = {}) {
-    super(host, { gridSize: opts.w || 10 });
-    this.w = opts.w || 10;
-    this.h = opts.h || 10;
-    this.gridSize = this.w;
-    this.gridOffset = { x: 0, y: 0 };
-    this._initClip();
-    this.setExtent(this.w, this.h);
-  }
-
-  /** 観測者系では背景が流れるので、枠からはみ出したものは切り落とす。 */
-  _initClip() {
-    const id = 'wc-clip-' + Math.random().toString(36).slice(2, 9);
-    const defs = svgEl('defs', {}, this.svg);
-    this._clipRect = svgEl('rect', { x: 0, y: 0, width: 1, height: 1 },
-      svgEl('clipPath', { id }, defs));
-    for (const [name, g] of Object.entries(this.layers)) {
-      if (name === 'grid') continue;            // 方眼は自前で範囲内だけ描く
-      g.setAttribute('clip-path', `url(#${id})`);
-    }
-  }
-
-  setExtent(w, h) {
-    this.w = w; this.h = h; this.gridSize = w;
-    const p = CANVAS.pad;
-    this.svg.setAttribute('viewBox', `${-p} ${-p} ${w + p * 2} ${h + p * 2}`);
-    this.wrap.style.aspectRatio = `${w + p * 2} / ${h + p * 2}`;
-    if (this._clipRect) { this._clipRect.setAttribute('width', w); this._clipRect.setAttribute('height', h); }
-    this.drawGrid();
-  }
-
-  setGridSize() { /* 正方形前提の親の実装は使わない */ }
-
-  setGridOffset(off) {
-    this.gridOffset = { x: off.x, y: off.y };
-    this.drawGrid();
-  }
-
-  toScreen(pt) { return { x: pt.x, y: this.h - pt.y }; }
-
-  fromClient(clientX, clientY) {
-    const ctm = this.svg.getScreenCTM();
-    if (!ctm) return { x: 0, y: 0 };
-    const p = this.svg.createSVGPoint();
-    p.x = clientX; p.y = clientY;
-    const q = p.matrixTransform(ctm.inverse());
-    return { x: q.x, y: this.h - q.y };
-  }
-
-  pxToUnits(px) {
-    const rect = this.svg.getBoundingClientRect();
-    const span = this.w + CANVAS.pad * 2;
-    if (!rect.width) return 0;
-    return px * span / rect.width;
-  }
-
-  snap(pt) {
-    return {
-      x: Math.max(0, Math.min(this.w, Math.round(pt.x))),
-      y: Math.max(0, Math.min(this.h, Math.round(pt.y)))
-    };
-  }
-
-  clamp(v) { return Math.max(0, Math.min(this.w, v)); }
-
-  /** 方眼。gridOffset のぶんだけ位相をずらして描く＝背景が流れる。 */
-  drawGrid() {
-    if (this.w == null) return;              // 親コンストラクタからの呼び出しを無視
-    const g = this.layers.grid;
-    g.innerHTML = '';
-    const w = this.w, h = this.h;
-    const off = this.gridOffset || { x: 0, y: 0 };
-    svgEl('rect', { x: 0, y: 0, width: w, height: h, fill: COLORS.bg }, g);
-
-    // 縦線：世界座標 x=k を、画面 x = k + off.x に描く
-    let k = Math.ceil(-off.x);
-    for (; k + off.x <= w + 1e-9; k++) {
-      const sx = k + off.x;
-      if (sx < -1e-9) continue;
-      const major = ((k % 5) + 5) % 5 === 0;
-      svgEl('line', {
-        x1: sx, y1: 0, x2: sx, y2: h,
-        stroke: major ? COLORS.gridMajor : COLORS.grid,
-        'stroke-width': major ? 0.035 : 0.02
-      }, g);
-    }
-    // 横線：世界座標 y=k を、画面 y = h - (k + off.y) に描く
-    let j = Math.ceil(-off.y);
-    for (; j + off.y <= h + 1e-9; j++) {
-      const sy = h - (j + off.y);
-      if (sy < -1e-9 || sy > h + 1e-9) continue;
-      const major = ((j % 5) + 5) % 5 === 0;
-      svgEl('line', {
-        x1: 0, y1: sy, x2: w, y2: sy,
-        stroke: major ? COLORS.gridMajor : COLORS.grid,
-        'stroke-width': major ? 0.035 : 0.02
-      }, g);
-    }
-    svgEl('rect', { x: 0, y: 0, width: w, height: h, fill: 'none', stroke: COLORS.axis, 'stroke-width': 0.04 }, g);
-  }
+/**
+ * 矢印に垂直な向きのラベル位置（画面座標）。
+ * 水平な矢印では真下になるので、直線（1d）の見た目は変わらない。
+ */
+function perpOffset(vel, dist = 0.72) {
+  const sx = vel.x, sy = -vel.y;                 // 画面座標は y が反転している
+  const L = Math.hypot(sx, sy);
+  if (L < 1e-9) return { dx: 0, dy: dist };
+  const px = -sy / L, py = sx / L;               // 進行方向の右手側
+  return { dx: px * dist, dy: py * dist + 0.15 };  // +0.15 は文字のベースライン合わせ
 }
 
 /* =========================================================================
@@ -172,6 +81,7 @@ export class WorldView {
     const cam = this.camWorld;
     const A = cam.anchor || { x: 0, y: 0 };
     const c = this.canvas;
+    this._labelEls = [];        // 重なりをほどくために、描いた文字を控えておく
     // 背景の位相 ＝ gridOffset ＋ anchor（地面に固定されたものは全部これで動く）
     c.setGridOffset(add(cam.gridOffset || { x: 0, y: 0 }, A));
     c.clear('guide', 'static', 'dynamic', 'points', 'labels', 'overlay');
@@ -217,8 +127,10 @@ export class WorldView {
         const style = observed ? RELATIVE_STYLES.relative : VECTOR_STYLES.velocity;
         const a = new Arrow(c, 'dynamic', styleName, { styleOverride: style });
         a.set(p, add(p, b.vel));
-        // ラベルは矢印の中点の下。先端に置くと画面の端で切れてしまう。
-        this._label({ x: p.x + b.vel.x / 2, y: p.y + b.vel.y / 2 }, velocityText(cam, b.vel), style.color, 0.62);
+        // ラベルは矢印の中点から、矢印に垂直な向きへ逃がす。
+        // 先端に置くと画面の端で切れ、真下に置くと斜めの矢印に重なる。
+        this._label({ x: p.x + b.vel.x / 2, y: p.y + b.vel.y / 2 },
+                    velocityText(cam, b.vel), style.color, perpOffset(b.vel));
       }
     }
 
@@ -229,7 +141,50 @@ export class WorldView {
       const from = ex.space === 'screen' ? ex.from : toView(ex.from);
       const to = ex.space === 'screen' ? ex.to : toView(ex.to);
       a.set(from, to);
-      if (ex.label) this._label({ x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 }, ex.label, style.color, -0.45);
+      if (ex.label) {
+        const v = { x: to.x - from.x, y: to.y - from.y };
+        const o = perpOffset(v);
+        this._label({ x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 },
+                    ex.label, style.color, { dx: -o.dx, dy: -o.dy });   // 反対側へ
+      }
+    }
+
+    this._deCollide();
+  }
+
+  /**
+   * 文字どうしが重なったら、あとから描いたほうを下（無理なら上）へずらす。
+   * 物体が近づくと速度ラベルが必ずぶつかるので、位置を固定値で調整するのではなく
+   * 描いたあとに実測してほどく。
+   */
+  _deCollide() {
+    const els = this._labelEls || [];
+    if (els.length < 2) return;
+    const h = this.canvas.h;
+    const box = (e) => { try { return e.getBBox(); } catch (err) { return null; } };
+    const boxes = els.map(box);
+
+    for (let i = 1; i < els.length; i++) {
+      if (!boxes[i]) continue;
+      for (let pass = 0; pass < 4; pass++) {
+        let moved = false;
+        for (let j = 0; j < i; j++) {
+          const a = boxes[j], b = boxes[i];
+          if (!a || !b) continue;
+          const ox = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+          const oy = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+          if (ox <= 0.02 || oy <= 0.02) continue;
+          const y0 = Number(els[i].getAttribute('y'));
+          let dy = (a.y + a.height) - b.y + 0.10;          // まず下へ逃がす
+          if (y0 + dy > h - 0.15) dy = a.y - (b.y + b.height) - 0.10;  // 下が詰まっていれば上へ
+          if (y0 + dy < 0.45) break;                        // どちらも無理なら諦める
+          els[i].setAttribute('y', y0 + dy);
+          boxes[i] = { x: b.x, y: b.y + dy, width: b.width, height: b.height };
+          moved = true;
+          break;
+        }
+        if (!moved) break;
+      }
     }
   }
 
@@ -260,6 +215,7 @@ export class WorldView {
       'stroke-width': 0.16, 'stroke-linejoin': 'round'
     }, g);
     t.textContent = b.label || b.id;
+    (this._labelEls || (this._labelEls = [])).push(t);
     return g;
   }
 
@@ -272,7 +228,8 @@ export class WorldView {
       fill: COLORS.velocity, 'text-anchor': 'middle', 'paint-order': 'stroke',
       stroke: COLORS.bg, 'stroke-width': 0.18, 'stroke-linejoin': 'round'
     }, g);
-    t.textContent = '速度 0（動いて見えない）';
+    t.textContent = '速度 0';
+    (this._labelEls || (this._labelEls = [])).push(t);
     return g;
   }
 
@@ -290,16 +247,23 @@ export class WorldView {
     return g;
   }
 
-  _label(pt, text, color, dy) {
+  /**
+   * @param {{x,y}} pt      世界座標（変換後）
+   * @param {number|{dx:number,dy:number}} off  画面座標でのずらし。
+   *        数値なら真下へ。斜めの矢印では矢印に垂直な向きを渡すこと。
+   */
+  _label(pt, text, color, off) {
     const c = this.canvas;
     const s = c.toScreen(pt);
+    const d = (typeof off === 'object' && off) ? off : { dx: 0, dy: off ?? 0.55 };
     const t = svgEl('text', {
-      x: s.x, y: s.y + (dy ?? 0.55), 'font-size': CANVAS.fontSize,
+      x: s.x + (d.dx || 0), y: s.y + (d.dy || 0), 'font-size': CANVAS.fontSize,
       fill: color, 'text-anchor': 'middle', 'paint-order': 'stroke',
       stroke: COLORS.bg, 'stroke-width': 0.16, 'stroke-linejoin': 'round',
       'pointer-events': 'none'
     }, c.layers.labels);
     t.textContent = text;
+    (this._labelEls || (this._labelEls = [])).push(t);
     return t;
   }
 
@@ -331,4 +295,4 @@ export class PaneGroup {
   destroy() { this.views.forEach(v => v.destroy()); this.views = []; this.el.remove(); }
 }
 
-export { frameLabel };
+export { frameLabel, WorldCanvas };

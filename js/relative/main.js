@@ -223,6 +223,7 @@ function setupSettings() {
   if (!btn) return;
   btn.addEventListener('click', async () => {
     const cur = dimension();
+    const dmode = layout.drawMode;
     const teacher = teacherMode();
     const v = await ui.modal({
       title: '設定',
@@ -234,10 +235,15 @@ function setupSettings() {
            <span style="color:#4b5563;font-size:15px">
            ONにすると、上の進捗バーからどのシーンにも移動できます。
            OFFのときは通過済みのシーンにだけ戻れます。</span></p>
+        <p>作図の操作：<b>${layout.profile.drawMode === 'tap' ? '①始点→②終点をタップ' : '押したままドラッグ'}</b>
+           （設定：${dmode === 'auto' ? '自動' : dmode}）</p>
         <p style="color:#4b5563;font-size:15px"><b>N</b> キーでも「次へ」に進めます。</p>`,
       actions: [
         { label: 'レイアウトを切替', value: 'layout' },
         { label: cur === '1d' ? '平面（2d）にする' : '直線（1d）にする', value: 'dim' },
+        { label: '作図：タップ', value: 'draw-tap' },
+        { label: '作図：ドラッグ', value: 'draw-drag' },
+        { label: '作図：自動', value: 'draw-auto' },
         { label: teacher ? '先生モードをOFF' : '先生モードをON', value: 'teacher' },
         { label: '前提を復習する（第1弾）', value: 'course' },
         { label: '第1弾（運動の表し方）へ', value: 'vol1' },
@@ -245,6 +251,12 @@ function setupSettings() {
         { label: '閉じる', value: 'close', variant: 'primary' }
       ]
     });
+    if (v && v.startsWith('draw-')) {
+      layout.setDrawMode(v.slice(5));
+      ui.toast('作図の操作：' + (v === 'draw-tap' ? 'タップ' : v === 'draw-drag' ? 'ドラッグ' : '自動'));
+      await mountScene(state.index);
+      return;
+    }
     if (v === 'vol1') { location.href = 'index.html'; return; }
     if (v === 'course') { location.href = 'index.html?course=relative'; return; }
     if (v === 'teacher') {

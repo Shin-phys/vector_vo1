@@ -61,9 +61,12 @@ export const SNAP = {
 };
 
 // 端末プロファイル（レイアウトと操作パラメータのみを切り替える。アプリは1つ）
+// drawMode: 'tap'（①始点→②終点）／ 'drag'（押したまま引く）
+// スマホは tap が既定。ドラッグは指を離した瞬間に確定してしまい、
+// 始点が指で隠れたまま決まってしまうため。⚙から手動で変えられる。
 export const layoutProfiles = {
-  phone:  { gridSize: 8,  snapRadius: 28, touchOffsetY: 44, minHitSize: 44, orientation: 'portrait', magnifier: true },
-  tablet: { gridSize: 10, snapRadius: 16, touchOffsetY: 0,  minHitSize: 32, orientation: 'any',      magnifier: false }
+  phone:  { gridSize: 8,  snapRadius: 28, touchOffsetY: 18, minHitSize: 44, orientation: 'portrait', magnifier: true,  drawMode: 'tap'  },
+  tablet: { gridSize: 10, snapRadius: 16, touchOffsetY: 0,  minHitSize: 32, orientation: 'any',      magnifier: false, drawMode: 'drag' }
 };
 
 export const LAYOUT = {

@@ -138,7 +138,9 @@ export class GridCanvas {
   drawPoint(pt, opts = {}) {
     const layer = opts.layer ? this.layers[opts.layer] : this.layers.points;
     const s = this.toScreen(pt);
-    const g = svgEl('g', { class: 'pt' }, layer);
+    // ラベルや点そのものは、下にある矢印のタップを塞がないようにする。
+    // ドラッグ用の当たり判定は Scene が別の circle.drag-handle として置いている。
+    const g = svgEl('g', { class: 'pt', 'pointer-events': 'none' }, layer);
     const color = opts.color || (opts.role === 'origin' ? COLORS.origin : COLORS.point);
     svgEl('circle', { cx: s.x, cy: s.y, r: opts.r || CANVAS.pointRadius, fill: color }, g);
     if (opts.ring) {
@@ -210,5 +212,114 @@ export class GridCanvas {
   destroy() {
     this.disableHover();
     this.host.innerHTML = '';
+  }
+}
+
+/* =========================================================================
+   WorldCanvas：GridCanvas を「横長（w×h）」と「流れる方眼」に拡張したもの。
+   第2弾の二画面と、記号への橋渡しの図（両アプリ）で使う。
+   core/vector.js の Arrow / DrawTool がそのまま使えるよう、
+   toScreen / fromClient / snap / layers / pxToUnits の約束は変えない。
+   ========================================================================= */
+export class WorldCanvas extends GridCanvas {
+  constructor(host, opts = {}) {
+    super(host, { gridSize: opts.w || 10 });
+    this.w = opts.w || 10;
+    this.h = opts.h || 10;
+    this.gridSize = this.w;
+    this.gridOffset = { x: 0, y: 0 };
+    this._initClip();
+    this.setExtent(this.w, this.h);
+  }
+
+  /** 観測者系では背景が流れるので、枠からはみ出したものは切り落とす。 */
+  _initClip() {
+    const id = 'wc-clip-' + Math.random().toString(36).slice(2, 9);
+    const defs = svgEl('defs', {}, this.svg);
+    this._clipRect = svgEl('rect', { x: 0, y: 0, width: 1, height: 1 },
+      svgEl('clipPath', { id }, defs));
+    for (const [name, g] of Object.entries(this.layers)) {
+      if (name === 'grid') continue;            // 方眼は自前で範囲内だけ描く
+      g.setAttribute('clip-path', `url(#${id})`);
+    }
+  }
+
+  setExtent(w, h) {
+    this.w = w; this.h = h; this.gridSize = w;
+    const p = CANVAS.pad;
+    this.svg.setAttribute('viewBox', `${-p} ${-p} ${w + p * 2} ${h + p * 2}`);
+    this.wrap.style.aspectRatio = `${w + p * 2} / ${h + p * 2}`;
+    if (this._clipRect) { this._clipRect.setAttribute('width', w); this._clipRect.setAttribute('height', h); }
+    this.drawGrid();
+  }
+
+  setGridSize() { /* 正方形前提の親の実装は使わない */ }
+
+  setGridOffset(off) {
+    this.gridOffset = { x: off.x, y: off.y };
+    this.drawGrid();
+  }
+
+  toScreen(pt) { return { x: pt.x, y: this.h - pt.y }; }
+
+  fromClient(clientX, clientY) {
+    const ctm = this.svg.getScreenCTM();
+    if (!ctm) return { x: 0, y: 0 };
+    const p = this.svg.createSVGPoint();
+    p.x = clientX; p.y = clientY;
+    const q = p.matrixTransform(ctm.inverse());
+    return { x: q.x, y: this.h - q.y };
+  }
+
+  pxToUnits(px) {
+    const rect = this.svg.getBoundingClientRect();
+    const span = this.w + CANVAS.pad * 2;
+    if (!rect.width) return 0;
+    return px * span / rect.width;
+  }
+
+  snap(pt) {
+    return {
+      x: Math.max(0, Math.min(this.w, Math.round(pt.x))),
+      y: Math.max(0, Math.min(this.h, Math.round(pt.y)))
+    };
+  }
+
+  clamp(v) { return Math.max(0, Math.min(this.w, v)); }
+
+  /** 方眼。gridOffset のぶんだけ位相をずらして描く＝背景が流れる。 */
+  drawGrid() {
+    if (this.w == null) return;              // 親コンストラクタからの呼び出しを無視
+    const g = this.layers.grid;
+    g.innerHTML = '';
+    const w = this.w, h = this.h;
+    const off = this.gridOffset || { x: 0, y: 0 };
+    svgEl('rect', { x: 0, y: 0, width: w, height: h, fill: COLORS.bg }, g);
+
+    // 縦線：世界座標 x=k を、画面 x = k + off.x に描く
+    let k = Math.ceil(-off.x);
+    for (; k + off.x <= w + 1e-9; k++) {
+      const sx = k + off.x;
+      if (sx < -1e-9) continue;
+      const major = ((k % 5) + 5) % 5 === 0;
+      svgEl('line', {
+        x1: sx, y1: 0, x2: sx, y2: h,
+        stroke: major ? COLORS.gridMajor : COLORS.grid,
+        'stroke-width': major ? 0.035 : 0.02
+      }, g);
+    }
+    // 横線：世界座標 y=k を、画面 y = h - (k + off.y) に描く
+    let j = Math.ceil(-off.y);
+    for (; j + off.y <= h + 1e-9; j++) {
+      const sy = h - (j + off.y);
+      if (sy < -1e-9 || sy > h + 1e-9) continue;
+      const major = ((j % 5) + 5) % 5 === 0;
+      svgEl('line', {
+        x1: 0, y1: sy, x2: w, y2: sy,
+        stroke: major ? COLORS.gridMajor : COLORS.grid,
+        'stroke-width': major ? 0.035 : 0.02
+      }, g);
+    }
+    svgEl('rect', { x: 0, y: 0, width: w, height: h, fill: 'none', stroke: COLORS.axis, 'stroke-width': 0.04 }, g);
   }
 }

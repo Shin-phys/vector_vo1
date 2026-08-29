@@ -20,6 +20,7 @@ const STEP_ORDER = [
   'step3',
   'step4',
   'step5',
+  'step6',
   'reflection'
 ];
 
@@ -34,10 +35,11 @@ const COURSES = {
   relative: {
     label: '確認',
     intro: `今日は <b>相対速度</b> を学びます。<br>
-            その前に、必要になることを3つだけ確認します（5分）。<br>
-            ① 基準点を変えても変位は変わらない　② 速度を矢印で表す　③ 矢印の差の作図`,
+            その前に、必要になることを確認します（7分）。<br>
+            ① 基準点を変えても変位は変わらない　② 速度を矢印で表す<br>
+            ③ 矢印の差の作図　④ それを記号で書くと どうなるか`,
     startLabel: 'はじめる',
-    steps: ['step25b', 'step4', 'step5'],
+    steps: ['step25b', 'step4', 'step5', 'step6'],
     endText: '<b>復習おわり。</b>ここまでが相対速度の前提です。',
     endHint: '基準点を変えても変位は変わりませんでした。つぎは、基準そのものを動いている物体に取り替えます。',
     next: { label: '相対速度へ進む →', href: 'relative.html' }
@@ -57,6 +59,7 @@ const STEP_FILES = {
   step3: './steps/step3-chain.js',
   step4: './steps/step4-velocity.js',
   step5: './steps/step5-compose.js',
+  step6: './steps/step6-symbol.js',
   reflection: './steps/reflection.js'
 };
 
@@ -420,6 +423,12 @@ HANDLERS['draw-vector'] = (step, item, meta, done) => {
   const tool = new vec.DrawTool(canvas, {
     profile: layout.profile,
     styleName: item.style || 'displacement',
+    // タップ方式のとき、いま何をすればよいかを示す
+    onPhase: (phase) => {
+      if (layout.profile.drawMode !== 'tap') return;
+      if (phase === 'end') ui.feedback('つぎに、<b>矢印の先（到着点）</b>をタップ。ここからやり直すなら、同じ点をもう一度タップ。', 'info');
+      else ui.clearFeedback();
+    },
     onPreview: (v) => {
       if (!v) { ui.setReadout([]); return; }
       const d = vec.describe(vec.V.sub(v.to, v.from), item.unit || '');
@@ -714,10 +723,13 @@ function setupSettings() {
   if (!btn) return;
   btn.addEventListener('click', async () => {
     const mode = layout.mode;
+    const dmode = layout.drawMode;
     const teacher = teacherMode();
     const v = await ui.modal({
       title: TEXT.settings,
       body: `<p>画面レイアウト（現在：<b>${layout.profile.name}</b>／設定：${mode}）</p>
+             <p>作図の操作：<b>${layout.profile.drawMode === 'tap' ? '①始点→②終点をタップ' : '押したままドラッグ'}</b>
+                （設定：${dmode === 'auto' ? '自動' : dmode}）</p>
              <p>先生モード：<b>${teacher ? 'ON' : 'OFF'}</b>
                 <span style="color:#4b5563;font-size:15px">
                 ONにすると、上の進捗バーからどのステップにも移動できます。
@@ -726,6 +738,9 @@ function setupSettings() {
         { label: '自動', value: 'auto' },
         { label: 'スマホ', value: 'phone' },
         { label: 'タブレット・PC', value: 'tablet' },
+        { label: '作図：タップ', value: 'draw-tap' },
+        { label: '作図：ドラッグ', value: 'draw-drag' },
+        { label: '作図：自動', value: 'draw-auto' },
         { label: teacher ? '先生モードをOFF' : '先生モードをON', value: 'teacher' },
         { label: '第2弾（相対速度）へ', value: 'vol2' },
         { label: '相対速度の前提だけ復習する', value: 'course' },
@@ -733,6 +748,12 @@ function setupSettings() {
         { label: '閉じる', value: 'close', variant: 'primary' }
       ]
     });
+    if (v && v.startsWith('draw-')) {
+      layout.setDrawMode(v.slice(5));
+      ui.toast('作図の操作：' + (v === 'draw-tap' ? 'タップ' : v === 'draw-drag' ? 'ドラッグ' : '自動'));
+      await mountStep(state.index);
+      return;
+    }
     if (v === 'vol2') { location.href = 'relative.html'; return; }
     if (v === 'course') { location.href = 'index.html?course=relative'; return; }
     if (v === 'teacher') {

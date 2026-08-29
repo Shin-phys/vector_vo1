@@ -23,19 +23,6 @@ body.rel-app #side:empty{display:none;}
   display:grid;gap:10px;grid-template-columns:1fr 1fr;align-items:start;
 }
 .pane-grid.is-single{grid-template-columns:1fr;max-width:820px;margin:0 auto;}
-.pane{
-  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-  padding:8px;min-width:0;
-}
-.pane-label{
-  display:inline-block;font-weight:700;font-size:16px;line-height:1.35;
-  padding:3px 10px;border-radius:999px;margin-bottom:6px;
-  background:#eef2f6;color:var(--muted);
-}
-.pane-ground   .pane-label{background:#eef2f6;color:var(--muted);}
-.pane-observer .pane-label{background:#e8f1ff;color:#1d4ed8;border:1px solid #bcd4ff;}
-.pane-canvas{width:100%;}
-.pane .canvas-wrap{max-height:none;border:none;border-radius:8px;}
 
 /* 再生コントロールの上に置く小さな道具立て */
 .pane-tools{
@@ -73,52 +60,6 @@ body.profile-phone .declare p{font-size:18px;}
 }
 .frame-btn.is-on{background:var(--accent);border-color:var(--accent);color:#fff;}
 
-/* 光らせた矢印（シーン4のタップ連動） */
-.arrow.is-lit{filter:drop-shadow(0 0 4px rgba(224,185,60,.95));}
-
-/* ---------- シーン4：図と式の並置 ---------- */
-.bridge{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;}
-.bridge > .bridge-fig{min-width:0;}
-.bridge-formula{
-  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-  padding:16px 14px;display:flex;flex-direction:column;gap:14px;
-}
-.formula-line{
-  font-size:clamp(22px,4.4vw,30px);display:flex;flex-wrap:wrap;align-items:center;
-  gap:6px;justify-content:center;font-variant-numeric:tabular-nums;
-}
-.term{
-  padding:4px 10px;border-radius:10px;border:2px solid transparent;cursor:pointer;
-  transition:background .15s,border-color .15s;
-}
-.term:focus-visible{outline:3px solid var(--accent);}
-.term.is-lit{background:#fff3c4;border-color:#e0b93c;}
-.term-legend{display:flex;flex-direction:column;gap:8px;font-size:16px;}
-.term-legend button{
-  text-align:left;border:2px solid var(--line);border-radius:10px;background:#fff;
-  padding:10px 12px;min-height:var(--tap);cursor:pointer;font-size:16px;
-}
-.term-legend button.is-lit{background:#fff3c4;border-color:#e0b93c;}
-.term-swatch{display:inline-block;width:22px;height:0;border-top-width:4px;border-top-style:solid;vertical-align:middle;margin-right:8px;}
-
-.numeric{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px;}
-.numeric input[type="number"]{
-  width:6em;font-size:22px;padding:8px 10px;border:2px solid var(--line);border-radius:10px;
-  font-family:inherit;text-align:right;
-}
-.numeric .unit{font-size:18px;color:var(--muted);}
-.dir-choice{display:flex;gap:8px;}
-.dir-choice button{
-  min-height:var(--tap);padding:8px 16px;border-radius:10px;border:2px solid var(--line);
-  background:#fff;cursor:pointer;font-size:17px;font-weight:700;
-}
-.dir-choice button.is-on{background:var(--accent);border-color:var(--accent);color:#fff;}
-
-.logbox{
-  white-space:pre-wrap;background:#f3f5f8;border:1px solid var(--line);border-radius:10px;
-  padding:10px 12px;font-size:15px;max-height:220px;overflow:auto;margin-top:10px;
-}
-
 /* ---------- スマホ：二画面は必ず上下。両方が同時に見えること ---------- */
 body.profile-phone.rel-app #app{padding:8px 8px 92px;gap:8px;}
 body.profile-phone .pane-grid{grid-template-columns:1fr;gap:8px;}
@@ -130,13 +71,10 @@ body.profile-phone .pane-label{font-size:15px;padding:2px 8px;margin-bottom:4px;
 body.profile-phone .pane-grid .pane .canvas-wrap{max-height:max(120px, calc((100vh - 450px) / 2));}
 /* 1画面だけのシーン（予測・切替）は、もっと大きく取ってよい */
 body.profile-phone .pane-grid.is-single .pane .canvas-wrap{max-height:max(200px, calc(100vh - 430px));}
-body.profile-phone .bridge-fig .canvas-wrap{max-height:max(180px, calc(100vh - 520px));}
 @supports (height:100dvh){
   body.profile-phone .pane-grid .pane .canvas-wrap{max-height:max(120px, calc((100dvh - 450px) / 2));}
   body.profile-phone .pane-grid.is-single .pane .canvas-wrap{max-height:max(200px, calc(100dvh - 430px));}
-  body.profile-phone .bridge-fig .canvas-wrap{max-height:max(180px, calc(100dvh - 520px));}
 }
-body.profile-phone .bridge{grid-template-columns:1fr;}
 body.profile-phone .declare h1{font-size:21px;}
 
 /* 横持ちで高さが足りないとき */
@@ -152,7 +90,4 @@ body.profile-phone .toggle input{width:18px;height:18px;}
 body.profile-phone.rel-app .feedback{font-size:15px;padding:8px 10px;}
 body.profile-phone.rel-app .readout-label{min-width:6em;font-size:14px;}
 body.profile-phone.rel-app .readout-value{font-size:17px;}
-
-/* シーン4の図は大きくしすぎない（記号の文字とのバランスを保つ） */
-.bridge-fig .canvas-wrap{max-width:520px;margin:0 auto;}
 .q-note{font-size:15px;font-weight:400;color:var(--muted);}

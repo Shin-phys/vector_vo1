@@ -140,33 +140,115 @@ function isSumOfLengths(u, legs) {
   return Math.abs(V.len(u) - total) <= JUDGE.lengthTolerance;
 }
 
-/* ---------- 作図ツール（ドラッグで矢印を1本描く） ---------- */
+/* ---------- 作図ツール（矢印を1本描く） ----------
+   2つのやり方を持つ。どちらを使うかは profile.drawMode（'tap' | 'drag'）。
+
+   tap  … ①始点をタップ → ②終点をタップ。スマホの既定。
+          ドラッグは指を離した瞬間に確定してしまい、始点が指で隠れたまま決まる。
+          タップなら1点目がスナップ後の位置に残るので、違えば打ち直せる。
+          長押しメニューとも競合しない。
+   drag … 押したまま引く。タブレット・PC の既定。
+*/
 export class DrawTool {
   /**
    * @param {GridCanvas} canvas
-   * @param {{profile:object, styleName:string, onPreview:Function, onComplete:Function, onStart:Function}} opts
+   * @param {{profile:object, styleName:string, onPreview:Function, onComplete:Function,
+   *          onStart:Function, onPhase:Function}} opts
+   *   onPhase(phase, point) … 'start'（1点目待ち）/ 'end'（2点目待ち）。
+   *   画面の案内文を切り替えるために使う。
    */
   constructor(canvas, opts = {}) {
     this.canvas = canvas;
     this.opts = opts;
-    this.profile = opts.profile || { touchOffsetY: 0, magnifier: false };
+    this.profile = opts.profile || { touchOffsetY: 0, magnifier: false, drawMode: 'drag' };
     this.arrow = null;
     this.cross = null;
+    this.startDot = null;
     this.active = false;
+    this.pending = null;              // tap 方式で、1点目が決まっている状態
     this._down = this._onDown.bind(this);
     this._move = this._onMove.bind(this);
     this._up = this._onUp.bind(this);
+    this._ctx = (e) => e.preventDefault();          // 長押しメニューを出さない
     canvas.svg.addEventListener('pointerdown', this._down);
+    canvas.svg.addEventListener('contextmenu', this._ctx);
+    // ここで onPhase を呼ばないこと。呼び出し側の `const tool = new DrawTool(...)` が
+    // まだ初期化されておらず、コールバックから tool を参照すると落ちる。
+  }
+
+  get mode() {
+    return this.opts.mode || this.profile.drawMode || 'drag';
+  }
+
+  _emitPhase(phase, pt) {
+    if (this.opts.onPhase) this.opts.onPhase(phase, pt);
   }
 
   _pt(ev) {
-    const offY = (ev.pointerType === 'touch') ? this.profile.touchOffsetY : 0;
+    // 指で隠れるぶんだけ上にずらす。tap 方式は打ち直せるので、ずらしは控えめでよい。
+    const offY = (ev.pointerType === 'touch') ? (this.profile.touchOffsetY || 0) : 0;
     const raw = this.canvas.fromClient(ev.clientX, ev.clientY - offY);
     return this.canvas.snap(raw);
   }
 
+  /* ---------- tap 方式 ---------- */
+  _onTap(ev) {
+    const p = this._pt(ev);
+    if (!this.pending) {
+      this.setStart(p);
+      return;
+    }
+    if (V.dist(this.pending, p) < 0.4) {   // 同じところをもう一度＝1点目を置き直しただけ
+      this.setStart(p);
+      return;
+    }
+    // 2点目：確定
+    if (this.arrow) this.arrow.remove();
+    this.arrow = new Arrow(this.canvas, 'dynamic', this.opts.styleName || 'draft');
+    this.arrow.set(this.pending, p);
+    const from = this.pending;
+    this.pending = null;
+    this._hideStartDot();
+    this.canvas.hideMagnifier();
+    this._emitPhase('start', null);
+    if (this.opts.onComplete) this.opts.onComplete({ from, to: p }, this.arrow);
+  }
+
+  /** 1点目を置く（すでに置いてあれば置き直す） */
+  setStart(p) {
+    this.pending = p;
+    if (this.arrow) { this.arrow.remove(); this.arrow = null; }
+    this._showStartDot(p);
+    this._emitPreview(null, null);
+    if (this.opts.onStart) this.opts.onStart(p);
+    this._emitPhase('end', p);
+    // ルーペは出さない。タップ方式では指が離れていて始点は見えているうえ、
+    // ルーペが画面の一角を覆って2点目のタップ先を塞いでしまう。
+  }
+
+  _showStartDot(p) {
+    const s = this.canvas.toScreen(p);
+    if (!this.startDot) {
+      this.startDot = svgEl('g', { class: 'start-dot', 'pointer-events': 'none' }, this.canvas.layers.overlay);
+      svgEl('circle', { r: 0.30, fill: 'none', stroke: COLORS.velocity, 'stroke-width': 0.07 }, this.startDot);
+      svgEl('circle', { r: 0.13, fill: COLORS.velocity }, this.startDot);
+      const t = svgEl('text', {
+        y: 0.78, 'font-size': CANVAS.fontSize, fill: COLORS.velocity, 'text-anchor': 'middle',
+        'paint-order': 'stroke', stroke: COLORS.bg, 'stroke-width': 0.16, 'stroke-linejoin': 'round'
+      }, this.startDot);
+      t.textContent = 'ここから';
+    }
+    this.canvas.layers.overlay.appendChild(this.startDot);
+    this.startDot.setAttribute('transform', `translate(${s.x} ${s.y})`);
+    this.startDot.setAttribute('opacity', 1);
+  }
+
+  _hideStartDot() { if (this.startDot) this.startDot.setAttribute('opacity', 0); }
+
+  /* ---------- drag 方式 ---------- */
   _onDown(ev) {
     if (this.disabled) return;
+    if (this.mode === 'tap') { ev.preventDefault(); this._onTap(ev); return; }
     ev.preventDefault();
     this.canvas.svg.setPointerCapture(ev.pointerId);
     this.active = true;
@@ -231,13 +313,19 @@ export class DrawTool {
 
   clear() {
     if (this.arrow) { this.arrow.remove(); this.arrow = null; }
+    this.pending = null;
+    this._hideStartDot();
+    this.canvas.hideMagnifier();
     this._emitPreview(null, null);
+    this._emitPhase('start', null);
   }
 
   destroy() {
     this.clear();
     if (this.cross) this.cross.remove();
+    if (this.startDot) { this.startDot.remove(); this.startDot = null; }
     this.canvas.svg.removeEventListener('pointerdown', this._down);
+    this.canvas.svg.removeEventListener('contextmenu', this._ctx);
   }
 }
 

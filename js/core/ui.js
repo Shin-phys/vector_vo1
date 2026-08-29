@@ -281,7 +281,7 @@ export const ui = {
     box.innerHTML = '';
     const q = document.createElement('p');
     q.className = 'choice-question';
-    q.textContent = item.question || '';
+    q.innerHTML = item.question || '';
     box.appendChild(q);
     const list = document.createElement('div');
     list.className = 'choice-list';

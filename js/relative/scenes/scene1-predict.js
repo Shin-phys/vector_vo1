@@ -43,9 +43,10 @@ export default {
 
     const applyDrawn = () => {
       if (!drawn) { view.setExtras([]); return; }
+      // ラベルは付けない。描いた矢印はこれ1本だけで、数値は下の readout に出る。
+      // 図の上に文字を足すと、物体の速度ラベルと重なることがある。
       view.setExtras([{
-        from: drawn.from, to: drawn.to, space: 'screen',
-        style: 'predict', label: 'あなたの予測'
+        from: drawn.from, to: drawn.to, space: 'screen', style: 'predict'
       }]);
     };
 
@@ -57,16 +58,26 @@ export default {
       ]);
     };
 
+    let phase = 'start';
+    const howTo = () => {
+      const tap = ctx.profile.drawMode === 'tap';
+      if (phase === 'end') return 'つぎに、<b>矢印の先</b>をタップ。やり直すなら同じ点をもう一度タップ。';
+      return tap
+        ? `<b>${RELATIVE_TEXT.drawFirst}</b>　${other.label} のところを<b>タップ</b>して、矢印の根もとを決めます。`
+        : `<b>${RELATIVE_TEXT.drawFirst}</b>　${other.label} のところから矢印をドラッグして描きます。`;
+    };
+
     const setGate = () => {
       ui.setActionState('play', { disabled: !drawn });
       ui.setActionState('clear', { disabled: !drawn });
       if (drawn) ui.feedback('描けました。再生して確かめましょう。', 'info');
-      else ui.feedback(`<b>${RELATIVE_TEXT.drawFirst}</b>　${other.label} のところから矢印をドラッグして描きます。`, 'wrong');
+      else ui.feedback(howTo(), phase === 'end' ? 'info' : 'wrong');
     };
 
     tool = new DrawTool(view.canvas, {
       profile: ctx.profile,
       styleName: 'predict',
+      onPhase: (ph) => { phase = ph; if (!drawn) setGate(); },
       onComplete: (res, arrow) => {
         arrow.remove();                       // 以後は view の extras として持たせる
         drawn = { from: res.from, to: res.to };

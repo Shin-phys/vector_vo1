@@ -25,6 +25,9 @@ function apply() {
   const compact = window.innerHeight < LAYOUT.landscapeMaxHeight &&
                   window.innerWidth / window.innerHeight >= LAYOUT.landscapeMinAspect;
   current = { name, ...layoutProfiles[name], compact };
+  // 作図の入力方式は、⚙から手動でも選べる（auto なら端末の既定）
+  const dm = storage.getSetting('drawMode', 'auto');
+  if (dm === 'tap' || dm === 'drag') current.drawMode = dm;
   document.body.classList.toggle('profile-phone', name === 'phone');
   document.body.classList.toggle('profile-tablet', name === 'tablet');
   document.body.classList.toggle('is-compact', compact);
@@ -44,5 +47,7 @@ export const layout = {
   get profile() { return current || apply(); },
   get mode() { return storage.getSetting('layoutMode', 'auto'); },
   setMode(mode) { storage.setSetting('layoutMode', mode); return apply(); },
+  get drawMode() { return storage.getSetting('drawMode', 'auto'); },
+  setDrawMode(mode) { storage.setSetting('drawMode', mode); return apply(); },
   onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); }
 };

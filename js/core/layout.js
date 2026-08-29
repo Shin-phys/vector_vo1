@@ -1,8 +1,8 @@
-// js/layout.js
+// js/core/layout.js
 // 端末プロファイル（phone / tablet）の判定と適用。手動トグルの設定も保持する。
 // アプリは1つ。切り替わるのはレイアウトと操作パラメータだけ。
 
-import { layoutProfiles, LAYOUT } from '../data/config.js';
+import { layoutProfiles, LAYOUT } from '../../data/config.js';
 import { storage } from './storage.js';
 
 const listeners = new Set();

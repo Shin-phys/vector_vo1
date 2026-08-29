@@ -4,11 +4,11 @@
 
 import { problems } from '../data/problems.js';
 import { FLOW, HINTS, TEXT, CANVAS } from '../data/config.js';
-import { GridCanvas } from './canvas.js';
-import * as vec from './vector.js';
-import { ui } from './ui.js';
-import { storage } from './storage.js';
-import { layout } from './layout.js';
+import { GridCanvas } from './core/canvas.js';
+import * as vec from './core/vector.js';
+import { ui } from './core/ui.js';
+import { storage } from './core/storage.js';
+import { layout } from './core/layout.js';
 
 /* ===== ステップの並び順（1行コメントアウトで飛ばせる） ===== */
 const STEP_ORDER = [

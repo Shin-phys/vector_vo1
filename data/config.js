@@ -92,3 +92,38 @@ export const TEXT = {
   passed: 'このステップは通過です',
   settings: '設定'
 };
+
+/* =========================================================================
+   第2弾（相対速度）用の設定。
+   色・錠前・レイアウトプロファイル・判定許容は上の共通定義をそのまま使う。
+   ここには「第2弾でしか使わない」ものだけを置く。
+   ========================================================================= */
+
+export const relativeConfig = {
+  dimension: '1d',        // "1d" | "2d"　既定は 1d（直線上のみ）
+  tickMs: 16,             // アニメーションの更新間隔の目安
+  speedScale: 0.25,       // 速度[マス/秒表示] → 実際の移動速度の倍率（授業で見やすい速さ）
+  transitionMs: 500,      // シーン3のカメラ移動（削ってよい要素）
+  predictTolerance: {     // 予測矢印の「合っていたか」表示に使う許容（判定はしないが色分けに使う）
+    angleDeg: JUDGE.angleToleranceDeg,
+    length: JUDGE.lengthTolerance
+  }
+};
+
+// 第2弾で使う追加の矢印スタイル。色の規約は第1弾と共通。
+export const RELATIVE_STYLES = {
+  predict:  { color: '#7c3aed', width: 0.10, dash: '0.3 0.22', head: 0.38, locked: false }, // 生徒の予測
+  relative: { color: COLORS.resultant, width: 0.14, dash: null, head: 0.46, locked: false } // 相対速度（差＝太線）
+};
+
+export const RELATIVE_TEXT = {
+  play: '再生',
+  pause: '一時停止',
+  restart: '最初から',
+  slow: 'ゆっくり見る',
+  showVectors: '速度ベクトルを表示',
+  frameGround: '地面',
+  drawFirst: 'まず予測を描こう'
+};
+
+export const RELATIVE_STORAGE_KEY = 'vec2.relative.v1';

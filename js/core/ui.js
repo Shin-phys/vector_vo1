@@ -1,8 +1,8 @@
-// js/ui.js
+// js/core/ui.js
 // 進捗バー・問題文・数値表示・フィードバック・ヒント（3段階）・モーダル・選択肢/スライダー/自由記述のUI。
 // 画面の骨格は index.html にあり、ここはその中身を書き換えるだけ。
 
-import { HINTS, TEXT, COLORS } from '../data/config.js';
+import { HINTS, TEXT, COLORS } from '../../data/config.js';
 
 const $ = (sel) => document.querySelector(sel);
 

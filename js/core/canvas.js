@@ -1,8 +1,8 @@
-// js/canvas.js
+// js/core/canvas.js
 // 方眼の描画と座標変換（論理座標 [0..gridSize] 左下原点 ⇔ 画面座標）を担当する。
 // 描画そのものは素のSVG。矢印の生成は vector.js の役目。
 
-import { COLORS, CANVAS, SNAP } from '../data/config.js';
+import { COLORS, CANVAS, SNAP } from '../../data/config.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 

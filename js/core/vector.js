@@ -1,9 +1,9 @@
-// js/vector.js
+// js/core/vector.js
 // 矢印の生成・ドラッグ・スナップ・判定と、宣言的な「シーン」（点と矢印の集合）の管理。
 // 束縛ベクトル（錠前つき）のスナップバック挙動もここに実装する。
 
 import { svgEl } from './canvas.js';
-import { VECTOR_STYLES, COLORS, JUDGE, CANVAS } from '../data/config.js';
+import { VECTOR_STYLES, COLORS, JUDGE, CANVAS } from '../../data/config.js';
 
 /* ---------- ベクトル演算 ---------- */
 export const V = {

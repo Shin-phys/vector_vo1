@@ -1,7 +1,7 @@
-// js/storage.js
+// js/core/storage.js
 // localStorage への進捗・設定・学習ログの保存と復元。リロードしても途中から再開できるようにする。
 
-import { STORAGE_KEY } from '../data/config.js';
+import { STORAGE_KEY } from '../../data/config.js';
 
 const EMPTY = { currentStep: null, steps: {}, settings: {}, reflection: '', startedAt: null };
 

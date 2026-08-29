@@ -23,6 +23,32 @@ const STEP_ORDER = [
   'reflection'
 ];
 
+/* ===== 復習コース =====
+   相対速度（第2弾）だけを単独で扱いたいときに、その前提だけを短く復習するための並び。
+   index.html?course=relative で起動する。
+     step25b … 原点を変えても変位は変わらない（第2弾シーン0の宣言が受けている）
+     step4   … 速度ベクトル（青い矢印と目盛の読み方）
+     step5   … 合成・差の作図（相対速度の作図そのもの）
+   終わると、そのまま relative.html へ進める。 */
+const COURSES = {
+  relative: {
+    label: '確認',
+    intro: `今日は <b>相対速度</b> を学びます。<br>
+            その前に、必要になることを3つだけ確認します（5分）。<br>
+            ① 基準点を変えても変位は変わらない　② 速度を矢印で表す　③ 矢印の差の作図`,
+    startLabel: 'はじめる',
+    steps: ['step25b', 'step4', 'step5'],
+    endText: '<b>復習おわり。</b>ここまでが相対速度の前提です。',
+    endHint: '基準点を変えても変位は変わりませんでした。つぎは、基準そのものを動いている物体に取り替えます。',
+    next: { label: '相対速度へ進む →', href: 'relative.html' }
+  }
+};
+
+function activeCourse() {
+  const key = new URLSearchParams(location.search).get('course');
+  return COURSES[key] ? { key, ...COURSES[key] } : null;
+}
+
 const STEP_FILES = {
   step1: './steps/step1-position.js',
   step2: './steps/step2-displacement.js',
@@ -32,6 +58,22 @@ const STEP_FILES = {
   step4: './steps/step4-velocity.js',
   step5: './steps/step5-compose.js',
   reflection: './steps/reflection.js'
+};
+
+/** 復習コースの冒頭。第1弾を通してやらない日に、いま何をするのかを先に伝える。 */
+const COURSE_INTRO_STEP = {
+  id: 'courseIntro',
+  label: '確認',
+  async mount(root, ctx) {
+    ui.showCanvas(false);
+    ui.setScale('');
+    ui.setPrompt(state.course.intro);
+    ui.actions([{
+      id: 'next', label: state.course.startLabel || 'はじめる',
+      variant: 'primary', onClick: () => ctx.complete(true)
+    }]);
+  },
+  unmount() {}
 };
 
 const INTRO_STEP = {
@@ -51,6 +93,7 @@ const INTRO_STEP = {
 const state = {
   steps: [],       // {id,label,module,problems}
   index: 0,
+  maxReached: 0,   // ここまでは進捗チップから戻れる
   current: null,
   canvas: null,
   scene: null,
@@ -71,7 +114,17 @@ async function boot() {
     }
   });
 
-  for (const id of STEP_ORDER) {
+  state.course = activeCourse();
+  const order = state.course ? state.course.steps : STEP_ORDER;
+
+  if (state.course && state.course.intro) {
+    state.steps.push({
+      id: 'courseIntro', label: state.course.label || '確認',
+      module: COURSE_INTRO_STEP, problems: null
+    });
+  }
+
+  for (const id of order) {
     if (id === 'intro') {
       state.steps.push({ id, label: INTRO_STEP.label, module: INTRO_STEP, problems: problems.intro });
       continue;
@@ -79,12 +132,16 @@ async function boot() {
     const file = STEP_FILES[id];
     if (!file) continue;
     const mod = await import(file);
-    state.steps.push({ id, label: mod.default.label || id, module: mod.default, problems: problems[id] });
+    let prob = problems[id];
+    // 復習コースでは、直前のステップを前提にした「ここから話が変わります」は
+    // コース冒頭の説明と重複するので出さない。
+    if (state.course && prob && prob.transition) prob = { ...prob, transition: null };
+    state.steps.push({ id, label: mod.default.label || id, module: mod.default, problems: prob });
   }
 
   setupSettings();
 
-  const saved = storage.getCurrentStep();
+  const saved = state.course ? null : storage.getCurrentStep();
   const savedIdx = state.steps.findIndex(s => s.id === saved);
   if (savedIdx > 0) {
     const go = await ui.modal({
@@ -92,7 +149,7 @@ async function boot() {
       body: `<p>前回は「${state.steps[savedIdx].label}」まで進んでいました。続きから始めますか？</p>`,
       actions: [{ label: '最初から', value: 'restart' }, { label: '続きから', value: 'resume', variant: 'primary' }]
     });
-    if (go === 'resume') state.index = savedIdx;
+    if (go === 'resume') { state.index = savedIdx; state.maxReached = savedIdx; }
     else { storage.reset(); state.index = 0; }
   }
   await mountStep(state.index);
@@ -105,18 +162,34 @@ function phoneAware(prob, key) {
 }
 
 /* ---------- ステップの mount / unmount ---------- */
+/** 先生モード（どのステップにも移動できる）。教員機で一度ONにすれば端末に残る。 */
+function teacherMode() { return storage.getSetting('teacherMode', false) === true; }
+
+/**
+ * 進捗チップ。生徒は「通過済みに戻る」だけ。
+ * 先に飛べるようにすると、順を追って考えさせる設計が崩れるため、
+ * 全解放は先生モードのときだけ。
+ */
+function renderStepBar(currentId) {
+  ui.renderSteps(state.steps, currentId, {
+    canJump: (i) => teacherMode() || i <= state.maxReached,
+    onJump: (i) => mountStep(i)
+  });
+}
+
 async function mountStep(i) {
   if (i >= state.steps.length) return finish();
   state.index = i;
+  state.maxReached = Math.max(state.maxReached, i);
   const step = state.steps[i];
   state.currentProblems = step.problems;
-  storage.setCurrentStep(step.id);
+  if (!state.course) storage.setCurrentStep(step.id);   // 復習コースは通常の進捗を汚さない
 
   if (state.current && state.current.module.unmount) {
     try { state.current.module.unmount(); } catch (e) { console.warn(e); }
   }
   ui.reset();
-  ui.renderSteps(state.steps, step.id);
+  renderStepBar(step.id);
 
   const gridSize = phoneAware(step.problems, 'gridSize') || layout.profile.gridSize;
   state.canvas = new GridCanvas(ui.el.canvasHost, { gridSize });
@@ -130,11 +203,20 @@ async function mountStep(i) {
 }
 
 function finish() {
+  const c = state.course;
   ui.reset();
   ui.showCanvas(false);
-  ui.setPrompt('<b>おつかれさまでした。</b>');
-  ui.feedback('次回は、基準を「動いている物体」に取り替えます。', 'info');
-  ui.actions([{ label: 'もう一度最初から', onClick: () => { storage.reset(); location.reload(); } }]);
+  ui.setPrompt(c ? c.endText : '<b>おつかれさまでした。</b>');
+  ui.feedback(c ? c.endHint : '次は、基準を「動いている物体」に取り替えます。', 'info');
+  ui.actions([
+    { label: 'もう一度最初から', onClick: () => { storage.reset(); location.reload(); } },
+    {
+      id: 'next',
+      label: c ? c.next.label : '第2弾：相対速度へ進む →',
+      variant: 'primary',
+      onClick: () => { location.href = (c ? c.next.href : 'relative.html'); }
+    }
+  ]);
 }
 
 /* ---------- ステップに渡す ctx ---------- */
@@ -632,17 +714,33 @@ function setupSettings() {
   if (!btn) return;
   btn.addEventListener('click', async () => {
     const mode = layout.mode;
+    const teacher = teacherMode();
     const v = await ui.modal({
       title: TEXT.settings,
-      body: `<p>画面レイアウト（現在：<b>${layout.profile.name}</b>／設定：${mode}）</p>`,
+      body: `<p>画面レイアウト（現在：<b>${layout.profile.name}</b>／設定：${mode}）</p>
+             <p>先生モード：<b>${teacher ? 'ON' : 'OFF'}</b>
+                <span style="color:#4b5563;font-size:15px">
+                ONにすると、上の進捗バーからどのステップにも移動できます。
+                OFFのときは通過済みのステップにだけ戻れます。</span></p>`,
       actions: [
         { label: '自動', value: 'auto' },
         { label: 'スマホ', value: 'phone' },
         { label: 'タブレット・PC', value: 'tablet' },
+        { label: teacher ? '先生モードをOFF' : '先生モードをON', value: 'teacher' },
+        { label: '第2弾（相対速度）へ', value: 'vol2' },
+        { label: '相対速度の前提だけ復習する', value: 'course' },
         { label: '進捗をリセット', value: 'reset' },
         { label: '閉じる', value: 'close', variant: 'primary' }
       ]
     });
+    if (v === 'vol2') { location.href = 'relative.html'; return; }
+    if (v === 'course') { location.href = 'index.html?course=relative'; return; }
+    if (v === 'teacher') {
+      storage.setSetting('teacherMode', !teacher);
+      renderStepBar(state.steps[state.index].id);
+      ui.toast(!teacher ? '先生モード ON' : '先生モード OFF');
+      return;
+    }
     if (v === 'reset') { storage.reset(); location.reload(); return; }
     if (v === 'close') return;
     layout.setMode(v);

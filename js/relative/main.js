@@ -6,6 +6,7 @@ import { relativeProblems } from '../../data/problems-relative.js';
 import { relativeConfig, RELATIVE_STORAGE_KEY, JUDGE } from '../../data/config.js';
 import { ui } from '../core/ui.js';
 import { layout } from '../core/layout.js';
+import { storage } from '../core/storage.js';   // レイアウトと先生モードの設定は第1弾と共有
 
 /* =========================================================================
    進行の設計図。'predict' と 'twoview' は問題数だけ繰り返す。
@@ -88,7 +89,21 @@ export const store = {
 };
 
 /* ========================================================================= */
-const state = { scenes: [], index: 0, current: null, ctx: null };
+const state = { scenes: [], index: 0, maxReached: 0, current: null, ctx: null };
+
+/** 先生モード（どのシーンにも移動できる）。第1弾と同じ設定を共有する。 */
+function teacherMode() { return storage.getSetting('teacherMode', false) === true; }
+
+/**
+ * 進捗チップ。生徒は「通過済みに戻る」だけ。
+ * 先に飛べると、シーン1の「予測を描くまで再生できない」制約が意味を失う。
+ */
+function renderSceneBar(currentKey) {
+  ui.renderSteps(state.scenes.map(x => ({ id: x.key, label: x.label })), currentKey, {
+    canJump: (i) => teacherMode() || i <= state.maxReached,
+    onJump: (i) => mountScene(i)
+  });
+}
 
 function dimension() {
   const override = store.getSetting('dimension', null);
@@ -173,6 +188,7 @@ function makeCtx(scene) {
 async function mountScene(i) {
   if (i >= state.scenes.length) return finish();
   state.index = i;
+  state.maxReached = Math.max(state.maxReached, i);
   const scene = state.scenes[i];
 
   if (state.current && state.current.module.unmount) {
@@ -181,7 +197,7 @@ async function mountScene(i) {
   ui.reset();
   ui.el.canvasHost.innerHTML = '';
   ui.el.canvasHost.style.display = '';
-  ui.renderSteps(state.scenes.map(x => ({ id: x.key, label: x.label })), scene.key);
+  renderSceneBar(scene.key);
   store.setCurrentScene(scene.key);
 
   state.current = scene;
@@ -196,7 +212,8 @@ function finish() {
   ui.feedback('おつかれさま。基準を取り替えると、同じ運動でも見え方が変わることを確かめました。', 'correct');
   ui.actions([
     { label: '学習ログをコピー', onClick: () => ui.copy(store.buildLog()) },
-    { label: 'もう一度', variant: 'primary', onClick: () => { store.reset(); mountScene(0); } }
+    { label: '第1弾へ', onClick: () => { location.href = 'index.html'; } },
+    { label: 'もう一度', variant: 'primary', onClick: () => { store.reset(); state.maxReached = 0; mountScene(0); } }
   ]);
 }
 
@@ -206,19 +223,36 @@ function setupSettings() {
   if (!btn) return;
   btn.addEventListener('click', async () => {
     const cur = dimension();
+    const teacher = teacherMode();
     const v = await ui.modal({
       title: '設定',
       body: `
         <p>表示：<b>${layout.profile.name === 'phone' ? 'スマホ' : 'タブレット／PC'}</b>　
            次元：<b>${cur === '1d' ? '直線上（1d）' : '平面（2d）'}</b></p>
-        <p style="color:#4b5563;font-size:15px">次元を変えると最初からやり直します。教科書に合わせて選んでください。</p>`,
+        <p style="color:#4b5563;font-size:15px">次元を変えると最初からやり直します。教科書に合わせて選んでください。</p>
+        <p>先生モード：<b>${teacher ? 'ON' : 'OFF'}</b>
+           <span style="color:#4b5563;font-size:15px">
+           ONにすると、上の進捗バーからどのシーンにも移動できます。
+           OFFのときは通過済みのシーンにだけ戻れます。</span></p>
+        <p style="color:#4b5563;font-size:15px"><b>N</b> キーでも「次へ」に進めます。</p>`,
       actions: [
         { label: 'レイアウトを切替', value: 'layout' },
         { label: cur === '1d' ? '平面（2d）にする' : '直線（1d）にする', value: 'dim' },
+        { label: teacher ? '先生モードをOFF' : '先生モードをON', value: 'teacher' },
+        { label: '前提を復習する（第1弾）', value: 'course' },
+        { label: '第1弾（運動の表し方）へ', value: 'vol1' },
         { label: '最初からやり直す', value: 'reset' },
         { label: '閉じる', value: 'close', variant: 'primary' }
       ]
     });
+    if (v === 'vol1') { location.href = 'index.html'; return; }
+    if (v === 'course') { location.href = 'index.html?course=relative'; return; }
+    if (v === 'teacher') {
+      storage.setSetting('teacherMode', !teacher);
+      renderSceneBar(state.scenes[state.index].key);
+      ui.toast(!teacher ? '先生モード ON' : '先生モード OFF');
+      return;
+    }
     if (v === 'layout') {
       layout.setMode(layout.profile.name === 'phone' ? 'tablet' : 'phone');
     } else if (v === 'dim') {

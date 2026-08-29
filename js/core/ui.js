@@ -27,27 +27,87 @@ export const ui = {
     this._idleHandler = () => this.resetIdle();
     ['pointerdown', 'keydown', 'input'].forEach(ev =>
       document.addEventListener(ev, this._idleHandler, { passive: true }));
+    this._bindKeys();
     return this;
   },
 
+  /* ---------- キーボード（教室のプロジェクタ操作用） ----------
+     N ＝「次へ」。ボタンを押すのと同じなので、
+     無効になっているボタン（例：予測を描くまでの再生）はキーでも押せない。 */
+  _bindKeys() {
+    if (this._keysBound) return;
+    this._keysBound = true;
+    document.addEventListener('keydown', (e) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const k = (e.key || '').toLowerCase();
+      if (k !== 'n') return;
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' ||
+                t.tagName === 'SELECT' || t.isContentEditable)) return;   // 入力中は無効
+      const btn = this.advanceButton();
+      if (!btn) return;
+      e.preventDefault();
+      btn.click();
+    });
+  },
+
+  /** いま「次へ」に当たるボタン。モーダルが開いていればそちらを優先する。 */
+  advanceButton() {
+    const modalOpen = this.el.modalRoot && this.el.modalRoot.style.display !== 'none'
+      && this.el.modalRoot.childElementCount > 0;
+    const root = modalOpen ? this.el.modalRoot : this.el.actions;
+    if (!root) return null;
+    const byId = root.querySelector('[data-id="next"]:not(:disabled)');
+    if (byId) return byId;
+    const prim = [...root.querySelectorAll('.btn-primary:not(:disabled)')].pop();
+    return prim || null;
+  },
+
   /* ---------- 進捗バー ---------- */
-  renderSteps(steps, currentId) {
+  /**
+   * @param {Array<{id:string,label:string}>} steps
+   * @param {string} currentId
+   * @param {{onJump?:(index:number)=>void, canJump?:(index:number)=>boolean}} [opts]
+   *
+   * タップで移動できるのは canJump が true を返すステップだけ。
+   * 既定は「通過済みにだけ戻れる」。先に飛べるようにすると、
+   * 第2弾の「予測を描くまで再生できない」制約が意味を失うので、
+   * 全解放は先生モード（呼び出し側の canJump）でのみ許すこと。
+   */
+  renderSteps(steps, currentId, opts = {}) {
     const box = this.el.steps;
     box.innerHTML = '';
+    const idx = steps.findIndex(x => x.id === currentId);
+    const jumpable = (i) => !!opts.onJump && i !== idx &&
+      (opts.canJump ? opts.canJump(i) : i < idx);
+
     steps.forEach((s, i) => {
-      const b = document.createElement('span');
+      const can = jumpable(i);
+      const b = document.createElement(can ? 'button' : 'span');
       b.className = 'step-chip';
-      const idx = steps.findIndex(x => x.id === currentId);
       if (s.id === currentId) b.classList.add('is-current');
       else if (i < idx) b.classList.add('is-done');
       b.textContent = s.label;
+      if (can) {
+        b.type = 'button';
+        b.classList.add('is-jumpable');
+        b.title = `${s.label} へもどる`;
+        b.setAttribute('aria-label', `${s.label} へ移動`);
+        b.addEventListener('click', () => opts.onJump(i));
+      }
       box.appendChild(b);
     });
     const rest = document.createElement('span');
-    const idx = steps.findIndex(x => x.id === currentId);
     rest.className = 'step-rest';
     rest.textContent = `のこり ${Math.max(0, steps.length - idx - 1)}`;
     box.appendChild(rest);
+
+    // 現在地が画面外にあるとどこにいるか分からないので、見える位置へ寄せる
+    const cur = box.querySelector('.step-chip.is-current');
+    if (cur && box.scrollWidth > box.clientWidth) {
+      const left = cur.offsetLeft - (box.clientWidth - cur.offsetWidth) / 2;
+      box.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+    }
   },
 
   /* ---------- 画面パーツ ---------- */
@@ -151,6 +211,7 @@ export const ui = {
       el.className = 'btn btn-' + (b.variant || 'default');
       el.textContent = b.label;
       if (b.id) el.dataset.id = b.id;
+      if (b.id === 'next' || b.variant === 'primary') el.title = 'N キーでも進めます';
       el.disabled = !!b.disabled;
       el.addEventListener('click', () => b.onClick && b.onClick(el));
       bar.appendChild(el);

@@ -38,8 +38,8 @@ const PROBLEMS_1D = [
     ...BASE_1D,
     id: 'r1',
     title: '同じ向き・Aが遅い',
-    setup: '車Aと車Bが、同じ向き（東）に走っています。<b>Aは20 m/s、Bは30 m/s</b>。',
-    question: '<b>Aに乗っている人</b>から見ると、Bはどちら向きに、どれくらいの速さで動いて見えるか。矢印を描こう。',
+    setup: '同じ向き（東）に、<b>Aは20 m/s、Bは30 m/s</b>。',
+    question: '<b>Aから見ると</b>、Bはどう動いて見える？',
     bodies: [
       { id: 'A', label: '車A', kind: 'car', color: '#2563eb', pos: { x: 6, y: 2.6 }, vel: { x: 2, y: 0 } },
       { id: 'B', label: '車B', kind: 'car', color: '#dc2626', pos: { x: 9, y: 5.2 }, vel: { x: 3, y: 0 } }
@@ -52,8 +52,8 @@ const PROBLEMS_1D = [
     ...BASE_1D,
     id: 'r2',
     title: '同じ向き・Aが速い（予測を裏切る問題）',
-    setup: '車Aと車Bが、同じ向き（東）に走っています。<b>Aは30 m/s、Bは20 m/s</b>。',
-    question: '<b>Aに乗っている人</b>から見ると、Bはどちら向きに、どれくらいの速さで動いて見えるか。矢印を描こう。',
+    setup: '同じ向き（東）に、<b>Aは30 m/s、Bは20 m/s</b>。',
+    question: '<b>Aから見ると</b>、Bはどう動いて見える？',
     bodies: [
       { id: 'A', label: '車A', kind: 'car', color: '#2563eb', pos: { x: 6, y: 2.6 }, vel: { x: 3, y: 0 } },
       { id: 'B', label: '車B', kind: 'car', color: '#dc2626', pos: { x: 9, y: 5.2 }, vel: { x: 2, y: 0 } }
@@ -66,8 +66,8 @@ const PROBLEMS_1D = [
     ...BASE_1D,
     id: 'r3',
     title: '向かい合う',
-    setup: '車Aは東へ<b>20 m/s</b>、車Bは西へ<b>10 m/s</b>。向かい合って近づきます。',
-    question: '<b>Aに乗っている人</b>から見ると、Bはどちら向きに、どれくらいの速さで動いて見えるか。矢印を描こう。',
+    setup: '向かい合って、<b>Aは東へ20 m/s、Bは西へ10 m/s</b>。',
+    question: '<b>Aから見ると</b>、Bはどう動いて見える？',
     bodies: [
       { id: 'A', label: '車A', kind: 'car', color: '#2563eb', pos: { x: 6,  y: 2.6 }, vel: { x: 2,  y: 0 } },
       { id: 'B', label: '車B', kind: 'car', color: '#dc2626', pos: { x: 18, y: 5.2 }, vel: { x: -1, y: 0 } }
@@ -102,8 +102,8 @@ const PROBLEMS_2D = [
     ...BASE_2D,
     id: 'r1-2d',
     title: '斜めに交差する（Aは東、Bは北）',
-    setup: '上から見た図です。Aは<b>東へ 20 m/s</b>、Bは<b>北へ 20 m/s</b> で進みます。',
-    question: '<b>Aに乗っている人</b>から見ると、Bはどちら向きに動いて見えるか。矢印を描こう。',
+    setup: '上から見た図。<b>Aは東へ20 m/s、Bは北へ20 m/s</b>。',
+    question: '<b>Aから見ると</b>、Bはどう動いて見える？',
     bodies: [
       { id: 'A', label: 'A', kind: 'dot', color: '#2563eb', pos: { x: 5, y: 9 }, vel: { x: 2, y: 0 } },
       { id: 'B', label: 'B', kind: 'dot', color: '#dc2626', pos: { x: 12, y: 5 }, vel: { x: 0, y: 2 } }
@@ -116,8 +116,8 @@ const PROBLEMS_2D = [
     ...BASE_2D,
     id: 'r2-2d',
     title: '川を渡る舟',
-    setup: '川の流れは<b>東へ 10 m/s</b>。舟は水に対して<b>北へ 20 m/s</b> で進みます（岸から見ると斜めに進む）。',
-    question: '<b>流れ（川の水）に乗っている人</b>から見ると、舟はどちら向きに動いて見えるか。矢印を描こう。',
+    setup: '川は<b>東へ10 m/s</b>。舟は水に対して<b>北へ20 m/s</b>。',
+    question: '<b>流れに乗って見ると</b>、舟はどう動いて見える？',
     observer: 'W',
     bodies: [
       { id: 'W', label: '流木（水と一緒に流れる）', kind: 'dot',  color: '#0ea5e9', pos: { x: 5, y: 5 }, vel: { x: 1, y: 0 } },
@@ -131,8 +131,8 @@ const PROBLEMS_2D = [
     ...BASE_2D,
     id: 'r3-2d',
     title: '追い越しながらすれ違う',
-    setup: 'Aは<b>北東</b>へ、Bは<b>東</b>へ進みます。',
-    question: '<b>Aに乗っている人</b>から見ると、Bはどちら向きに動いて見えるか。矢印を描こう。',
+    setup: '<b>Aは北東へ、Bは東へ</b>進みます。',
+    question: '<b>Aから見ると</b>、Bはどう動いて見える？',
     bodies: [
       { id: 'A', label: 'A', kind: 'dot', color: '#2563eb', pos: { x: 4, y: 5 }, vel: { x: 2, y: 2 } },
       { id: 'B', label: 'B', kind: 'dot', color: '#dc2626', pos: { x: 5, y: 11 }, vel: { x: 3, y: 0 } }
@@ -162,7 +162,7 @@ export const declare = {
 
 /* ---------- シーン3：基準を切り替える ---------- */
 export const switchScene = {
-  prompt: '基準を「地面／A／B」に切り替えて、同じ運動を見比べよう。',
+  prompt: '基準を切り替えて、同じ運動を見比べよう。',
   questions: [
     {
       id: 'q1',
@@ -194,7 +194,7 @@ export const switchScene = {
 
 /* ---------- シーン4：記号へ渡す ---------- */
 export const symbolScene = {
-  prompt: '矢印の図と式を見比べよう。どちらかをタップすると、対応する部分が両方光ります。',
+  prompt: '図と式を見比べよう。どちらかをタップすると、両方が光ります。',
   formula: 'v_AB = v_B − v_A',
   terms: [
     { id: 'vAB', tex: 'v<sub>AB</sub>', label: 'Aから見たBの速度', arrow: 'relative' },

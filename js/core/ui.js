@@ -32,7 +32,7 @@ export const ui = {
   },
 
   /* ---------- キーボード（教室のプロジェクタ操作用） ----------
-     N ＝「次へ」。ボタンを押すのと同じなので、
+     スペース と N ＝「次へ」。ボタンを押すのと同じなので、
      無効になっているボタン（例：予測を描くまでの再生）はキーでも押せない。 */
   _bindKeys() {
     if (this._keysBound) return;
@@ -40,10 +40,12 @@ export const ui = {
     document.addEventListener('keydown', (e) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const k = (e.key || '').toLowerCase();
-      if (k !== 'n') return;
+      if (k !== 'n' && k !== ' ' && e.code !== 'Space') return;
       const t = e.target;
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' ||
                 t.tagName === 'SELECT' || t.isContentEditable)) return;   // 入力中は無効
+      // ボタンにフォーカスがあるとき、スペースはそのボタンを押す動作なので任せる
+      if ((k === ' ' || e.code === 'Space') && t && t.tagName === 'BUTTON') return;
       const btn = this.advanceButton();
       if (!btn) return;
       e.preventDefault();
@@ -121,25 +123,12 @@ export const ui = {
     p.innerHTML = '';
     if (!text) { p.style.display = 'none'; return; }
     p.style.display = '';
+    // 問題文は課題そのもの。折りたたむと生徒が何をすべきか分からなくなるので、
+    // スマホでも省略せずに全文を出す。長さは問題データ側で短く保つこと。
     const body = document.createElement('div');
-    body.className = 'prompt-body is-clamped';
+    body.className = 'prompt-body';
     body.innerHTML = text;
     p.appendChild(body);
-    // スマホでは2行を超えたら「もっと見る」で折りたたむ
-    const more = document.createElement('button');
-    more.type = 'button';
-    more.className = 'prompt-more';
-    more.textContent = 'もっと見る';
-    more.addEventListener('click', () => {
-      const clamped = body.classList.toggle('is-clamped');
-      more.textContent = clamped ? 'もっと見る' : '閉じる';
-    });
-    p.appendChild(more);
-    requestAnimationFrame(() => {
-      const overflow = body.scrollHeight - body.clientHeight > 2;
-      more.style.display = overflow ? '' : 'none';
-      if (!overflow) body.classList.remove('is-clamped');
-    });
     if (opts.badge) {
       const b = document.createElement('span');
       b.className = 'prompt-badge';
@@ -211,7 +200,7 @@ export const ui = {
       el.className = 'btn btn-' + (b.variant || 'default');
       el.textContent = b.label;
       if (b.id) el.dataset.id = b.id;
-      if (b.id === 'next' || b.variant === 'primary') el.title = 'N キーでも進めます';
+      if (b.id === 'next' || b.variant === 'primary') el.title = 'スペース／N キーでも進めます';
       el.disabled = !!b.disabled;
       el.addEventListener('click', () => b.onClick && b.onClick(el));
       bar.appendChild(el);

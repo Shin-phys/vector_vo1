@@ -17,10 +17,10 @@ const STEP_ORDER = [
   'step2',
   'step25a',
   'step25b',
+  'step6',      // 変位の記号。変位の話が続いているうちに固める（速度に入る前）
   'step3',
   'step4',
   'step5',
-  'step6',
   'reflection'
 ];
 
@@ -39,7 +39,7 @@ const COURSES = {
             ① 基準点を変えても変位は変わらない　② 速度を矢印で表す<br>
             ③ 矢印の差の作図　④ それを記号で書くと どうなるか`,
     startLabel: 'はじめる',
-    steps: ['step25b', 'step4', 'step5', 'step6'],
+    steps: ['step25b', 'step6', 'step4', 'step5'],
     endText: '<b>復習おわり。</b>ここまでが相対速度の前提です。',
     endHint: '基準点を変えても変位は変わりませんでした。つぎは、基準そのものを動いている物体に取り替えます。',
     next: { label: '相対速度へ進む →', href: 'relative.html' }
@@ -136,9 +136,10 @@ async function boot() {
     if (!file) continue;
     const mod = await import(file);
     let prob = problems[id];
-    // 復習コースでは、直前のステップを前提にした「ここから話が変わります」は
-    // コース冒頭の説明と重複するので出さない。
-    if (state.course && prob && prob.transition) prob = { ...prob, transition: null };
+    // 復習コースでは、②.5b の「ここから話が変わります」だけ出さない。
+    // 直前のステップを前提にした文で、コース冒頭の説明と重複するため。
+    // ④⑤の「速度の話に入ります」「動くものが2つ」は復習コースでも必要なので残す。
+    if (state.course && id === 'step25b' && prob && prob.transition) prob = { ...prob, transition: null };
     state.steps.push({ id, label: mod.default.label || id, module: mod.default, problems: prob });
   }
 
@@ -202,6 +203,18 @@ async function mountStep(i) {
   const ctx = makeContext(step);
   state.ctx = ctx;
   state.current = step;
+
+  // 話が切り替わるところで、大きく宣言する。
+  // problems.transition があればどのステップでも出せる（step25b / ④ / ⑤ で使用）。
+  const tr = step.problems && step.problems.transition;
+  if (tr) {
+    await ui.modal({
+      title: tr.title || '',
+      body: tr.body || '',
+      actions: [{ label: tr.button || 'わかった', variant: 'primary' }]
+    });
+  }
+
   await step.module.mount(ui.el.stage, ctx);
 }
 

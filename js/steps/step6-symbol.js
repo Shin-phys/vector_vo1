@@ -1,5 +1,6 @@
 // js/steps/step6-symbol.js
-// ⑤の後の「記号へ」。日本語で理解したことを、記号に橋渡しする。
+// ②.5b の後の「記号へ」。日本語で理解したことを、記号に橋渡しする。
+// 変位の話が続いているうちに置く（速度に入る前）。
 //
 // 画面の作りは core/bridge.js（第2弾シーン4と共通）。
 // 生徒が第2弾で v_AB = v_B − v_A を見たとき「あのときと同じ形だ」と気づけることが
@@ -12,7 +13,7 @@ let bridge = null;
 
 export default {
   id: 'step6',
-  label: '⑥',
+  label: '記号',
 
   async mount(root, ctx) {
     this._ctx = ctx;
@@ -90,18 +91,40 @@ export default {
       const box = ui.el.interact;
       box.style.display = '';
       box.innerHTML = `<p class="choice-question">${q2.question}</p>`;
-      const row = document.createElement('div');
-      row.className = 'numeric';
-      const ix = document.createElement('input');
-      const iy = document.createElement('input');
-      for (const el of [ix, iy]) { el.type = 'number'; el.inputMode = 'numeric'; el.step = '1'; el.placeholder = '?'; }
-      const s1 = document.createElement('span'); s1.className = 'unit'; s1.textContent = '（東西';
-      const s2 = document.createElement('span'); s2.className = 'unit'; s2.textContent = '、南北';
-      const s3 = document.createElement('span'); s3.className = 'unit'; s3.textContent = '）km';
-      row.append(s1, ix, s2, iy, s3);
-      box.appendChild(row);
-      const gate = () => ui.setActionState('check', { disabled: !(ix.value !== '' && iy.value !== '') });
-      ix.addEventListener('input', gate); iy.addEventListener('input', gate);
+      // 向きはボタン、大きさは数値。スマホの数字キーボードにはマイナスが無く、
+      // 符号を打たせると入力できない。向きを選ばせるほうが物理としても自然。
+      let dirX = null, dirY = null;
+      const gate = () => ui.setActionState('check', {
+        disabled: !(ix.value !== '' && iy.value !== '' && dirX && dirY)
+      });
+      const mkAxis = (label, dirs, onPick) => {
+        const row = document.createElement('div');
+        row.className = 'numeric';
+        const lab = document.createElement('span');
+        lab.className = 'axis-label'; lab.textContent = label;
+        const pick = document.createElement('div');
+        pick.className = 'dir-choice';
+        for (const d of dirs) {
+          const b = document.createElement('button');
+          b.type = 'button'; b.textContent = d.label; b.dataset.dir = d.id;
+          b.addEventListener('click', () => {
+            onPick(d.id);
+            pick.querySelectorAll('button').forEach(x => x.classList.toggle('is-on', x.dataset.dir === d.id));
+            gate();
+          });
+          pick.appendChild(b);
+        }
+        const inp = document.createElement('input');
+        inp.type = 'number'; inp.inputMode = 'numeric'; inp.min = '0'; inp.step = '1'; inp.placeholder = '?';
+        inp.addEventListener('input', gate);
+        const unit = document.createElement('span');
+        unit.className = 'unit'; unit.textContent = 'km';
+        row.append(lab, pick, inp, unit);
+        box.appendChild(row);
+        return inp;
+      };
+      const ix = mkAxis('東西', [{ id: 'east', label: '東へ' }, { id: 'west', label: '西へ' }], v => dirX = v);
+      const iy = mkAxis('南北', [{ id: 'north', label: '北へ' }, { id: 'south', label: '南へ' }], v => dirY = v);
       let tries = 0;
       const settle = (ok) => {
         solved = true;
@@ -115,10 +138,12 @@ export default {
         { id: 'check', label: '判定する', variant: 'primary', disabled: true, onClick: () => {
             if (solved) return;
             tries++;
-            const ok = Number(ix.value) === q2.answer.x && Number(iy.value) === q2.answer.y;
+            const vx = Math.abs(Number(ix.value)) * (dirX === 'west' ? -1 : 1);
+            const vy = Math.abs(Number(iy.value)) * (dirY === 'south' ? -1 : 1);
+            const ok = vx === q2.answer.x && vy === q2.answer.y;
             if (ok) settle(true);
             else if (tries >= 3) settle(false);
-            else ui.feedback('r<sub>公園</sub> − r<sub>駅</sub> を、成分ごとに引いてみよう。西は −、南は − です。', 'wrong');
+            else ui.feedback('r<sub>公園</sub> − r<sub>駅</sub> を、成分ごとに引いてみよう。引いた答えが負なら、向きは西または南です。', 'wrong');
           } },
         { id: 'next', label: '次へ', disabled: true, onClick: () => ctx.complete(true) }
       ]);

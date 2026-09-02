@@ -67,12 +67,12 @@ body.profile-phone .pane{padding:6px;}
 body.profile-phone .pane-label{font-size:15px;padding:2px 8px;margin-bottom:4px;}
 /* 1画面あたりの高さが足りないときは、方眼の見える範囲を狭めて収める。
    ★スマホでは2画面が同時にスクロールなしで見えることが最優先。
-   ヘッダ・問題文・下部固定ボタンぶん（約450px）を引いた残りを2等分する。 */
-body.profile-phone .pane-grid .pane .canvas-wrap{max-height:max(120px, calc((100vh - 450px) / 2));}
+   ヘッダ・問題文・下部固定ボタンぶん（約470px）を引いた残りを2等分する。 */
+body.profile-phone .pane-grid .pane .canvas-wrap{max-height:max(120px, calc((100vh - 470px) / 2));}
 /* 1画面だけのシーン（予測・切替）は、もっと大きく取ってよい */
 body.profile-phone .pane-grid.is-single .pane .canvas-wrap{max-height:max(200px, calc(100vh - 430px));}
 @supports (height:100dvh){
-  body.profile-phone .pane-grid .pane .canvas-wrap{max-height:max(120px, calc((100dvh - 450px) / 2));}
+  body.profile-phone .pane-grid .pane .canvas-wrap{max-height:max(120px, calc((100dvh - 470px) / 2));}
   body.profile-phone .pane-grid.is-single .pane .canvas-wrap{max-height:max(200px, calc(100dvh - 430px));}
 }
 body.profile-phone .declare h1{font-size:21px;}

@@ -27,7 +27,7 @@ export default {
     const pred = ctx.store.getPrediction(p.id);
 
     ui.setScale(p.scaleLabel);
-    ui.setPrompt(`${p.setup}<br>同じ運動を、<b>地面から</b>と<b>${obs.label}から</b>、同時に見てみよう。`, { badge: '確認' });
+    ui.setPrompt(`${p.setup}<br>同じ運動を、<b>地面から</b>と<b>${obs.label}から</b>同時に見よう。`, { badge: '確認' });
 
     /* ---- 道具立て（速度ベクトルの表示トグル＋時間バー） ---- */
     host.innerHTML = '';

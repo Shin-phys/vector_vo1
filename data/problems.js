@@ -34,7 +34,9 @@ export const problems = {
   step1: {
     title: '位置を矢印で表す',
     minutes: 4,
-    passLine: { correct: 1, of: 2 },
+    // 2問目「基準を変えると矢印が変わる」がこのステップの要なので、
+    // 1問正解でも通過モーダルを出さない（＝両方やらせる）。
+    passLine: { correct: 2, of: 2 },
     scaleLabel: '1マス = 1 km',
     items: [
       {
@@ -58,20 +60,40 @@ export const problems = {
         }
       },
       {
+        // 1問目で描いた「学校→駅」を残したまま、基準点だけを公園に変える。
+        // 同じ「駅」を指しているのに矢印が変わることを、その場で見せるのがねらい。
         id: 's1q2',
         type: 'draw-vector',
-        prompt: '公園は、学校から西に 2、北に 3 の位置にある。同じように<b>学校から公園への矢印</b>を描こう。',
+        prompt: 'では、<b>公園から駅</b>はどうでしょうか？　矢印を引き、<b>向きと成分</b>を考えてみよう。',
         style: 'position',
         unit: 'km',
-        origin: { ...MAP.school },
-        landmarks: [{ ...MAP.park }],
-        answer: { from: { x: 3, y: 3 }, to: { x: 1, y: 6 } },
-        hints: ['西は左向きです。マスをいくつ戻りますか？'],
+        origin: { ...MAP.park },
+        // 公園は item.origin として描かれるので、ここには入れない（二重描きになる）
+        scene: {
+          points: {
+            school:  { ...MAP.school },
+            station: { ...MAP.station }
+          },
+          vectors: [
+            { id: 'r1', from: 'school', to: 'station', style: 'position', locked: true, label: '学校から' }
+          ]
+        },
+        answer: { from: { x: 1, y: 6 }, to: { x: 6, y: 4 }, origin: { x: 3, y: 3 } },
+        hints: ['基準が学校から公園に変わりました。どこから描き始めますか？'],
         feedback: [
-          { when: 'reversed', text: '向きが逆です。学校から公園へ、の順で描きましょう。' },
-          { when: 'wrongLength', text: '向きは合っています。西に2マス、北に3マス、数え直してみましょう。' }
+          { when: 'reversed', text: '向きが逆です。公園から駅へ、の順で描きましょう。' },
+          { when: 'fromOrigin', text: '学校からではありません。いまの基準は公園です。' },
+          { when: 'wrongStart', text: '描き始めの点を確かめましょう。基準は公園です。' }
         ],
-        explanation: '学校から西へ2マス、北へ3マス進んだ先が公園です。'
+        explanation: '公園から東へ5マス、南へ2マス進んだ先が駅です。',
+        reveal: {
+          title: '駅は動いていないのに、矢印は変わった',
+          body: '<p><b>駅の位置は変わっていません。</b>それでも、基準点を学校から公園に変えると、'
+              + '矢印の<b>向きも長さも成分も</b>変わりました。</p>'
+              + '<p>位置ベクトルは「その地点そのもの」ではなく、'
+              + '<b>ある基準から見たときの、そこまでの行き方</b>を表しています。'
+              + 'これがベクトルの特徴のひとつです。</p>'
+        }
       }
     ]
   },
@@ -79,20 +101,30 @@ export const problems = {
   /* ===================== ② 変位＝先端から先端へ ===================== */
   step2: {
     title: '変位を矢印で表す',
-    minutes: 6,
-    passLine: { correct: 2, of: 3 },
+    minutes: 5,
+    // 2問目「道筋が違っても同じ変位」がこのステップの要なので、両方やらせる。
+    passLine: { correct: 2, of: 2 },
     scaleLabel: '1マス = 1 km',
     items: [
       {
         id: 's2q1',
         type: 'draw-vector',
-        prompt: '駅から公園へ移動した。<b>この移動を表す矢印</b>を描こう。',
+        prompt: '学校から見た2つの位置ベクトルを残してあります。'
+              + '<br>駅から公園へ移動した。<b>この移動を表す矢印</b>を描こう。',
         style: 'displacement',
         unit: 'km',
-        landmarks: [{ ...MAP.station }, { ...MAP.park }],
         scene: {
-          points: { school: { ...MAP.school, role: 'origin' } },
-          vectors: []
+          points: {
+            school:  { ...MAP.school, role: 'origin' },
+            station: { ...MAP.station },
+            park:    { ...MAP.park }
+          },
+          // ①で描いた「学校から」の矢印を、記号つきで残す。
+          // 変位が「先端から先端へ」であることが、この2本があると見えやすい。
+          vectors: [
+            { id: 'rSta',  from: 'school', to: 'station', style: 'position', locked: true, label: 'r駅' },
+            { id: 'rPark', from: 'school', to: 'park',    style: 'position', locked: true, label: 'r公園' }
+          ]
         },
         answer: { from: { x: 6, y: 4 }, to: { x: 1, y: 6 }, origin: { x: 3, y: 3 } },
         hints: ['出発点は学校ではありません。「駅から公園へ」の移動です。'],
@@ -114,43 +146,31 @@ export const problems = {
         }
       },
       {
-        id: 's2q2',
-        type: 'draw-vector',
-        prompt: '今度は<b>図書館から公園へ</b>移動した。この移動を表す矢印を描こう。',
-        style: 'displacement',
-        unit: 'km',
-        landmarks: [{ ...MAP.library }, { ...MAP.park }],
-        scene: { points: { school: { ...MAP.school, role: 'origin' } }, vectors: [] },
-        answer: { from: { x: 4, y: 1 }, to: { x: 1, y: 6 }, origin: { x: 3, y: 3 } },
-        hints: ['出発点は図書館、到着点は公園です。'],
-        feedback: [
-          { when: 'reversed', text: '出発点から到着点へ向かっていますか？' },
-          { when: 'fromOrigin', text: '学校からではありません。図書館から描き始めます。' }
-        ],
-        explanation: '図書館から公園へ、まっすぐ引いた矢印が変位です。'
-      },
-      {
+        // さっきと同じ「駅から公園へ」を、今度はぐねぐね道で。
+        // 例をそろえることで、変わったのは道筋だけだと分かる。
         id: 's2q3',
         type: 'draw-vector',
-        prompt: '★ ぐねぐねした道を通って、<b>駅から図書館へ</b>移動しました。この移動を表す矢印を描こう。',
+        prompt: '★ 今度は<b>ぐねぐねした道</b>を通って、さっきと同じ<b>駅から公園へ</b>移動しました。'
+              + '<br>この移動を表す矢印を描こう。',
         style: 'displacement',
         unit: 'km',
-        landmarks: [{ ...MAP.station }, { ...MAP.library }],
+        landmarks: [{ ...MAP.station }, { ...MAP.park }],
         scene: { points: { school: { ...MAP.school, role: 'origin' } }, vectors: [] },
         path: [
-          { x: 6, y: 4 }, { x: 7, y: 5 }, { x: 7, y: 2 }, { x: 5, y: 3 },
-          { x: 3, y: 2 }, { x: 5, y: 1 }, { x: 4, y: 1 }
+          { x: 6, y: 4 }, { x: 7, y: 6 }, { x: 5, y: 7 }, { x: 4, y: 4 },
+          { x: 2, y: 3 }, { x: 1, y: 4 }, { x: 1, y: 6 }
         ],
-        answer: { from: { x: 6, y: 4 }, to: { x: 4, y: 1 }, origin: { x: 3, y: 3 } },
+        answer: { from: { x: 6, y: 4 }, to: { x: 1, y: 6 }, origin: { x: 3, y: 3 } },
         hints: ['通った道筋の長さではなく、「どこからどこへ」だけを見ます。'],
         feedback: [
           { when: 'wrongLength', text: '道筋の長さを描いていませんか？ 見るのは出発点と到着点だけです。' },
-          { when: 'reversed', text: '駅から図書館へ、の順です。' }
+          { when: 'reversed', text: '駅から公園へ、の順です。' }
         ],
         explanation: '通った道筋がどれだけ曲がっていても、変位は出発点と到着点だけで決まります。',
         reveal: {
           title: '道筋がちがっても、変位は同じ',
-          body: '<p>通った道筋が違っても、<b>同じ2点の間なら同じ矢印</b>になります。変位が表しているのは「移動の道のり」ではなく「どこからどこへ動いたか」です。</p>'
+          body: '<p>さっきの1問目と<b>まったく同じ矢印</b>になりました。道筋はぜんぜん違うのにです。</p>'
+              + '<p>変位が表しているのは「移動の道のり」ではなく「<b>どこからどこへ</b>動いたか」だけだからです。</p>'
         }
       }
     ]
@@ -164,13 +184,16 @@ export const problems = {
     scaleLabel: '1マス = 1 km',
     intro: {
       title: 'その矢印は、何を言っている矢印？',
-      body: '<p>画面に2本の矢印があります。動かす前に、それぞれが何を言っている矢印なのか、声に出して言ってみましょう。</p><ul><li><b>位置ベクトル</b>（学校→駅）…「駅は、学校から東に3・北に1のところにある」</li><li><b>変位ベクトル</b>（駅→公園）…「駅から公園へ、西に5・北に2動いた」</li></ul><p>そのうえで動かして、<b>いま言った文がまだ言えるか</b>を確かめます。</p>'
+      body: '<p>画面に2本の矢印があります。課題を行う前に、それぞれが何を言っている矢印なのか、声に出して言ってみましょう。</p>'
+          + '<ul><li><b>位置ベクトル</b>（学校→駅）…「駅は、学校から東に3・北に1のところにある」</li>'
+          + '<li><b>変位ベクトル</b>（駅→公園）…「西に5・北に2動いた」</li></ul>'
+          + '<p>声に出した文が、<b>課題を行った後でも成立しているのか</b>を確かめます。</p>'
     },
     items: [
       {
         id: 's25a-t1',
         type: 'explore-drag',
-        prompt: '課題1｜2本の矢印を<b>それぞれ動かして</b>みよう。動かしたあと、さっき言った文はまだ言えますか。',
+        prompt: '課題1｜2本の矢印を<b>それぞれ動かして</b>みよう。動かしたあと、さっき声に出した文は<b>成立し続けていますか</b>。',
         unit: 'km',
         scene: {
           points: {
@@ -200,7 +223,9 @@ export const problems = {
         hints: ['まず 🔒 のついた矢印（学校→駅）をつかんで動かしてみましょう。'],
         reveal: {
           title: '長さも向きも変わっていないのに',
-          body: '<p>数字を見ると、<b>どちらの矢印も成分は変わっていません</b>。長さも向きもそのままです。</p><p>それでも位置ベクトルだけは元に戻ります。変わってしまったのは数字ではなく、<b>その矢印が言えていたこと</b>のほうです。</p>'
+          body: '<p>数字を見ると、<b>どちらの矢印も成分は変わっていません</b>。長さも向きもそのままです。</p>'
+              + '<p>それでも位置ベクトルだけは元に戻ります。変わってしまったのは数字ではなく、'
+              + '<b>その矢印が意味していたこと</b>のほうです。</p>'
         }
       },
       {
@@ -484,9 +509,17 @@ export const problems = {
   /* ===================== ④ 速度の矢印 ===================== */
   step4: {
     title: '速度の矢印',
-    minutes: 4,
-    passLine: { correct: 1, of: 2 },
+    minutes: 6,
+    passLine: { correct: 2, of: 3 },
     scaleLabel: '1マス = 1 km/h（①〜③とはスケールが変わります）',
+    transition: {
+      title: 'ここから、速度の話に入ります',
+      body: '<p>ここまでは「<b>どこからどこへ動いたか</b>」＝変位を見てきました。</p>'
+          + '<p>ここからは「<b>どれくらいの速さで動いているか</b>」を矢印で表します。</p>'
+          + '<p>方眼の1マスの意味が <b>km から km/h へ</b> 変わります。'
+          + '矢印の描き方そのものは、これまでとまったく同じです。</p>',
+      button: 'わかった'
+    },
     items: [
       {
         id: 's4q1',
@@ -512,6 +545,33 @@ export const problems = {
         }
       },
       {
+        // 直線上では、向きを符号で表せることをここで見せる。
+        // 第2弾（Aから見るとBが西へ下がって見える）の準備でもある。
+        id: 's4west',
+        type: 'draw-vector',
+        prompt: '今度は<b>西へ 6 km</b> の移動に 2 時間かかった。速度の矢印を描こう。',
+        style: 'velocity',
+        unit: 'km/h',
+        scene: { points: { P: { x: 7, y: 1, label: 'スタート' } }, vectors: [] },
+        answer: { from: { x: 7, y: 1 }, to: { x: 4, y: 1 } },
+        hints: ['速さは前の問題と同じです。ちがうのは向きだけ。'],
+        feedback: [
+          { when: 'reversed', text: '西は左向きです。矢印はどちらを向きますか？' },
+          { when: 'wrongLength', text: '向きは合っています。6 ÷ 2 は何になりますか？' }
+        ],
+        explanation: '速さは 6 ÷ 2 ＝ 3 km/h。前の問題と同じ大きさで、向きだけが反対です。',
+        reveal: {
+          title: '東を「＋」と決めると、西向きは「−」',
+          body: '<p>矢印の<b>長さは前の問題と同じ</b>で、向きだけが反対でした。'
+              + '成分の表示も <b>(−3, 0)</b> になっています。</p>'
+              + '<p>直線上の運動では、いちいち「西向きに 3」と書くかわりに、'
+              + '<b>東を＋と決めて −3 km/h</b> と書くことがあります。'
+              + '<b>符号が向きを表している</b>わけです。</p>'
+              + '<p class="sym-note">この書き方は、あとで「相手から見ると後ろへ下がって見える」'
+              + 'という場面でそのまま使います。</p>'
+        }
+      },
+      {
         id: 's4q2',
         type: 'draw-vector',
         prompt: '東へ 4 km・北へ 2 km の移動に 2 時間かかった。<b>速度の矢印</b>を描こう。',
@@ -532,6 +592,14 @@ export const problems = {
   /* ===================== ⑤ 速度の合成 ===================== */
   step5: {
     title: '速度の合成',
+    transition: {
+      title: '動いているものが、2つ登場します',
+      body: '<p>ここまでは、動いているものは<b>1つ</b>でした。</p>'
+          + '<p>ここからは、<b>動く歩道の上を人が歩く</b>、<b>流れる川を舟が進む</b>——のように、'
+          + '<b>2つの動きが重なる</b>場面をあつかいます。</p>'
+          + '<p>「地面から見ると、どう動いて見えるか」が問題になります。</p>',
+      button: 'わかった'
+    },
     minutes: 6,
     passLine: { correct: 2, of: 3 },
     scaleLabel: '1マス = 1 m/s（すべて「地面から見た速度」です）',
@@ -614,7 +682,7 @@ export const problems = {
     title: '記号へ渡す',
     minutes: 4,
     scaleLabel: '1マス = 1 km',
-    prompt: '基準点 <b>O</b> は学校です。矢印の図と式を見比べよう。どちらかをタップすると、対応する部分が両方光ります。',
+    prompt: '基準点 <b>O</b> は学校。図と式を見比べよう。どちらかをタップすると、両方が光ります。',
     // 図は data の座標をそのまま使う（学校＝基準点 O）
     origin: { x: 3, y: 3, label: 'O' },
     places: [
@@ -638,9 +706,10 @@ export const problems = {
       explain: '出発が公園、到着が駅。<b>後 − 前</b>なので r<sub>駅</sub> − r<sub>公園</sub> です。矢印も 公園→駅 の向きになります。'
     },
     quizValue: {
-      question: '駅から公園への変位の成分は？（東西・南北の順に、東と北を＋で）',
+      question: '駅から公園への変位を、<b>向きと大きさ</b>で答えよう。',
       answer: { x: -5, y: 2 },
-      explain: 'r<sub>公園</sub> − r<sub>駅</sub> ＝ (−2, 3) − (3, 1) ＝ <b>(−5, 2)</b>。西へ5、北へ2です。'
+      explain: 'r<sub>公園</sub> − r<sub>駅</sub> ＝ (−2, 3) − (3, 1) ＝ <b>(−5, 2)</b>。'
+             + 'つまり <b>西へ 5 km、北へ 2 km</b>。引いた答えが負になる向きが「西・南」です。'
     }
   },
 

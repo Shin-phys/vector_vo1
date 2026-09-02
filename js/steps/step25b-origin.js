@@ -8,14 +8,7 @@ export default {
 
   async mount(root, ctx) {
     this._ctx = ctx;
-    const t = ctx.problems && ctx.problems.transition;
-    if (t) {
-      await ctx.ui.modal({
-        title: t.title || 'ここから話が変わります',
-        body: t.body || '',
-        actions: [{ label: t.button || '切り替えました', variant: 'primary' }]
-      });
-    }
+    // 冒頭の区切り（problems.transition）は main.js が共通で出すので、ここでは出さない。
     await ctx.runItems();
     await ctx.complete(true);
   },

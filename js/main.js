@@ -518,19 +518,7 @@ HANDLERS['draw-vector'] = (step, item, meta, done) => {
   };
 
   // 吸着先は「画面に見えている点」だけ。答えの端点を混ぜると当てられてしまう。
-  const magnets = [];
-  if (item.origin) magnets.push({ x: item.origin.x, y: item.origin.y });
-  for (const lm of (item.landmarks || [])) magnets.push({ x: lm.x, y: lm.y });
-  for (const p of Object.values((item.scene && item.scene.points) || {})) {
-    if (!p.hidden) magnets.push({ x: p.x, y: p.y });
-  }
-  // シーンの矢印の両端も、目で見えている点なので吸着先にする（継ぎ足しや先端どうしを結ぶ作図のため）
-  for (const v of ((item.scene && item.scene.vectors) || [])) {
-    if (v.hidden) continue;
-    const a = (item.scene.points || {})[v.from], b = (item.scene.points || {})[v.to];
-    if (a) magnets.push({ x: a.x, y: a.y });
-    if (b) magnets.push({ x: b.x, y: b.y });
-  }
+  const magnets = collectMagnets(item);
 
   const tool = new vec.DrawTool(canvas, {
     profile: layout.profile,
@@ -611,6 +599,115 @@ HANDLERS['draw-vector'] = (step, item, meta, done) => {
     onCount: () => storage.recordHint(step.id, item.id)
   });
 };
+
+/* --- draw-multi：1つの画面で複数の矢印を描き切る ---
+   targets を1本ずつ別問題にすると「このステップは通過です」で飛ばせてしまい、
+   そろった絵が最後まで出てこない。ここでは全部描くまで先へ進ませない。 */
+HANDLERS['draw-multi'] = (step, item, meta, done) => {
+  const canvas = state.canvas;
+  buildScene(item.scene || { points: {}, vectors: [] });
+
+  const magnets = collectMagnets(item);
+  const remaining = (item.targets || []).map((t, i) => ({ ...t, index: i }));
+  const total = remaining.length;
+  const drawn = [];
+  let attempts = 0;
+
+  const status = () => {
+    const left = remaining.length;
+    if (!left) return item.doneText || 'すべて描けました。';
+    const next = remaining[0];
+    return (item.progressText || 'あと {n} 本。つぎは <b>{name}</b> です。')
+      .replace('{n}', left).replace('{name}', next.name || '');
+  };
+
+  const refresh = (kind = 'info') => {
+    ui.feedback(status(), remaining.length ? kind : 'correct');
+    ui.setActionState('next', { disabled: remaining.length > 0 });
+  };
+
+  const showAnswerAll = () => {
+    for (const t of remaining.slice()) {
+      const a = new vec.Arrow(canvas, 'answer', 'answer');
+      a.set(t.answer.from, t.answer.to);
+      a.setOpacity(0.35);
+    }
+    remaining.length = 0;
+    storage.recordPassedWithHelp(step.id, item.id);
+  };
+
+  const tool = new vec.DrawTool(canvas, {
+    profile: layout.profile,
+    magnets,
+    styleName: item.style || 'velocity',
+    onPreview: (v) => {
+      if (!v) { ui.setReadout([]); return; }
+      const d = vec.describe(vec.V.sub(v.to, v.from), item.unit || '');
+      ui.setReadout([
+        { id: 'draft', label: '成分', value: d.words },
+        { id: 'mag', label: '大きさ', value: d.magnitude }
+      ]);
+    },
+    onComplete: (v) => {
+      attempts++;
+      // 残っている的のうち、どれかに当たれば受け付ける（描く順番は問わない）
+      const hitIdx = remaining.findIndex(t => vec.judge(v, { answer: t.answer }).ok);
+      if (hitIdx >= 0) {
+        const t = remaining.splice(hitIdx, 1)[0];
+        const keep = new vec.Arrow(canvas, 'static', item.style || 'velocity', { label: t.label });
+        keep.set(t.answer.from, t.answer.to);
+        drawn.push(t.name || t.label || '');
+        tool.clear();
+        storage.recordAttempt(step.id, item.id, true);
+        ui.toast((t.name || '1本') + ' OK');
+        refresh('correct');
+        return;
+      }
+      // 外れたときは、いちばん近い的の誤答パターンで返す
+      const near = remaining[0];
+      const r = near ? vec.judge(v, { answer: near.answer, feedback: item.feedback }) : { pattern: null };
+      ui.feedback(feedbackFor({ feedback: item.feedback }, r.pattern) + '<br>' + status(), 'wrong');
+      storage.recordAttempt(step.id, item.id, false);
+      if (attempts >= total + FLOW.maxAttempts) {
+        showAnswerAll();
+        ui.feedback((item.explanation || '') + '<br>残りは薄い矢印で出しました。確かめたら次へ進みましょう。', 'info');
+        refresh('info');
+      }
+    }
+  });
+
+  const acts = [
+    { label: TEXT.retry, onClick: () => { tool.clear(); refresh(); } },
+    { label: TEXT.showAnswer, onClick: () => { showAnswerAll(); refresh('info'); } },
+    { label: '次へ', id: 'next', variant: 'primary', disabled: true, onClick: async () => {
+        ui.stopHints(); tool.destroy();
+        if (item.reveal) {
+          await ui.modal({ title: item.reveal.title || '', body: item.reveal.body || '',
+                           actions: [{ label: 'わかった', variant: 'primary' }] });
+        }
+        done({ correct: true });
+      } }
+  ];
+  ui.actions(acts);
+  refresh();
+  ui.startHints({ hints: item.hints || [], onCount: () => storage.recordHint(step.id, item.id) });
+};
+
+/** 画面に見えている点を吸着先として集める（答えの端点は入れない） */
+function collectMagnets(item) {
+  const magnets = [];
+  if (item.origin) magnets.push({ x: item.origin.x, y: item.origin.y });
+  for (const lm of (item.landmarks || [])) magnets.push({ x: lm.x, y: lm.y });
+  const pts = (item.scene && item.scene.points) || {};
+  for (const p of Object.values(pts)) if (!p.hidden) magnets.push({ x: p.x, y: p.y });
+  for (const v of ((item.scene && item.scene.vectors) || [])) {
+    if (v.hidden) continue;
+    const a = pts[v.from], b = pts[v.to];
+    if (a) magnets.push({ x: a.x, y: a.y });
+    if (b) magnets.push({ x: b.x, y: b.y });
+  }
+  return magnets;
+}
 
 /* --- choice：選択肢から選ぶ --- */
 HANDLERS['choice'] = (step, item, meta, done) => {

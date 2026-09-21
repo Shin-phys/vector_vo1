@@ -17,7 +17,9 @@ export const problems = {
     title: '運動の表し方',
     minutes: 3,
     scaleLabel: '1マス = 1 km',
-    prompt: '学校から +x に 3 km、そこから +y に 4 km 進みました。<br><b>学校からどれだけ離れているでしょう？</b>',
+    prompt: '<b>Sさん</b>が学校を出て、+x に 3 km、そこから +y に 4 km 進みました。<br>'
+          + '<b>Sさんは、学校からどれだけ離れているでしょう？</b><br>'
+          + '<span style="font-size:15px;color:#4b5563">この時間は、Sさんの動きを矢印（ベクトル）で表していきます。</span>',
     startLabel: 'はじめる',
     scene: {
       points: {
@@ -34,15 +36,16 @@ export const problems = {
   step1: {
     title: '位置を矢印で表す',
     minutes: 4,
-    // 2問目「基準を変えると矢印が変わる」がこのステップの要なので、
-    // 1問正解でも通過モーダルを出さない（＝両方やらせる）。
-    passLine: { correct: 2, of: 2 },
+    // ①②（駅・公園の位置ベクトル）は必ず描かせる。
+    // 3問目「基準を変えると矢印が変わる」は②.5bの伏線なので、時間があればやる。
+    passLine: { correct: 2, of: 3 },
     scaleLabel: '1マス = 1 km',
     items: [
       {
         id: 's1q1',
         type: 'draw-vector',
-        prompt: '駅は、学校から <b>+x に 3、+y に 1</b> の位置にある。<b>学校から駅への矢印</b>を描こう。',
+        prompt: 'Sさんは<b>駅</b>にいます。駅は、学校から <b>+x に 3、+y に 1</b> の位置にある。'
+              + '<b>学校から駅への矢印</b>を描こう。',
         style: 'position',
         unit: 'km',
         origin: { ...MAP.school },
@@ -60,11 +63,41 @@ export const problems = {
         }
       },
       {
-        // 1問目で描いた「学校→駅」を残したまま、基準点だけを公園に変える。
-        // 同じ「駅」を指しているのに矢印が変わることを、その場で見せるのがねらい。
+        // ② 同じ基準点から、もう1つの地点へ。この2本の先端どうしを結ぶのが次の変位。
         id: 's1q2',
         type: 'draw-vector',
-        prompt: 'では、<b>公園から駅</b>はどうでしょうか？　矢印を引き、<b>向きと成分</b>を考えてみよう。',
+        prompt: 'Sさんはこれから<b>公園</b>へ向かいます。公園は、学校から <b>−x に 2、+y に 3</b> の位置にある。'
+              + '同じ基準点から、<b>学校から公園への矢印</b>を描こう。',
+        style: 'position',
+        unit: 'km',
+        origin: { ...MAP.school },
+        landmarks: [{ ...MAP.park }],
+        scene: {
+          points: { station: { ...MAP.station } },
+          vectors: []
+        },
+        answer: { from: { x: 3, y: 3 }, to: { x: 1, y: 6 } },
+        hints: ['基準点は さっきと同じ 学校です。−x は左向きです。'],
+        feedback: [
+          { when: 'reversed', text: '向きが逆です。学校から公園へ、の順で描きましょう。' },
+          { when: 'wrongStart', text: '描き始めは学校です。基準点は変わっていません。' },
+          { when: 'wrongLength', text: '向きは合っています。−x に 2 マス、+y に 3 マス、数え直してみましょう。' }
+        ],
+        explanation: '学校から −x に 2 マス、+y に 3 マス進んだ先が公園です。',
+        reveal: {
+          title: '同じ基準点から、2本',
+          body: '<p>これで <b>学校 → 駅</b> と <b>学校 → 公園</b> の2本がそろいました。</p>'
+              + '<p>どちらも同じ基準点（学校）から出ています。'
+              + '次は、この<b>2本の先端どうし</b>に注目します。</p>'
+        }
+      },
+      {
+        // 1問目で描いた「学校→駅」を残したまま、基準点だけを公園に変える。
+        // 同じ「駅」を指しているのに矢印が変わることを、その場で見せるのがねらい。
+        id: 's1q3',
+        type: 'draw-vector',
+        prompt: 'では、基準を<b>公園</b>に取り替えてみます。<b>公園から駅</b>はどうでしょうか？'
+              + '　矢印を引き、<b>向きと成分</b>を考えてみよう。',
         style: 'position',
         unit: 'km',
         origin: { ...MAP.park },
@@ -109,8 +142,9 @@ export const problems = {
       {
         id: 's2q1',
         type: 'draw-vector',
-        prompt: '学校から見た2つの位置ベクトルを残してあります。'
-              + '<br>駅から公園へ移動した。<b>この移動を表す矢印</b>を描こう。',
+        prompt: 'いま描いた2本の位置ベクトルを残してあります。'
+              + '<br>Sさんが<b>駅から公園へ</b>移動しました。<b>この移動を表す矢印</b>を描こう。'
+              + '<br><span style="font-size:15px;color:#4b5563">どの向きに、どれだけ位置が変わったか、の矢印です。</span>',
         style: 'displacement',
         unit: 'km',
         scene: {
@@ -142,7 +176,8 @@ export const problems = {
               + '公園の位置ベクトルを <b>r<sub>公園</sub></b> と書きます。'
               + 'いま描いた「駅から公園へ」の変位 <b><span class="vec">駅公園</span></b> は '
               + '<b>r<sub>公園</sub> − r<sub>駅</sub></b>。'
-              + '<b>矢印は 前→後、式は 後 − 前</b> です。</p>'
+              + '出発を <b>bef</b>、到着を <b>aft</b> と呼びます。'
+              + '<b>矢印は bef → aft、式は aft − bef</b> です。</p>'
         }
       },
       {
@@ -150,7 +185,7 @@ export const problems = {
         // 例をそろえることで、変わったのは道筋だけだと分かる。
         id: 's2q3',
         type: 'draw-vector',
-        prompt: '★ 今度は<b>ぐねぐねした道</b>を通って、さっきと同じ<b>駅から公園へ</b>移動しました。'
+        prompt: '★ 今度はSさんが<b>ぐねぐねした道</b>を通って、さっきと同じ<b>駅から公園へ</b>移動しました。'
               + '<br>この移動を表す矢印を描こう。',
         style: 'displacement',
         unit: 'km',
@@ -176,20 +211,111 @@ export const problems = {
     ]
   },
 
+  /* ===================== 速度はどの向き？（②の直後） =====================
+     平均の速度の「向き」だけを先に押さえる。v = Δr / Δt なので向きは Δr と同じ。
+     ここで向きを決めておくと、④では「スケールだけが変わる」話に集中できる。 */
+  stepv: {
+    title: '速度はどの向き？',
+    minutes: 3,
+    passLine: { correct: 1, of: 1 },
+    scaleLabel: '1マス = 1 km',
+    items: [
+      {
+        id: 'sv-tap',
+        type: 'tap-select',
+        prompt: 'Sさんは駅から公園へ、30分かけて移動しました。<br>'
+              + '<b>このときの（平均の）速度と同じ向きの矢印</b>を、画面からタップして選ぼう。',
+        hintText: '矢印の線そのものをタップしてください。',
+        scene: {
+          points: {
+            school:  { ...MAP.school, role: 'origin' },
+            station: { ...MAP.station },
+            park:    { ...MAP.park },
+            library: { ...MAP.library }
+          },
+          vectors: [
+            { id: 'rSta',  from: 'school',  to: 'station', style: 'position',     locked: true, label: 'r駅' },
+            { id: 'rPark', from: 'school',  to: 'park',    style: 'position',     locked: true, label: 'r公園' },
+            { id: 'rLib',  from: 'school',  to: 'library', style: 'position',     locked: true, label: 'r図書館' },
+            { id: 'disp',  from: 'station', to: 'park',    style: 'displacement',               label: '駅→公園' }
+          ]
+        },
+        options: [
+          { vector: 'rSta',  feedback: 'それは「学校から見て駅がどこか」を表す矢印です。Sさんの<b>移動</b>ではありません。' },
+          { vector: 'rPark', feedback: 'それは「学校から見て公園がどこか」を表す矢印です。動いた向きとは別ものです。' },
+          { vector: 'rLib',  feedback: 'Sさんは図書館へは行っていません。' },
+          { vector: 'disp',  correct: true }
+        ],
+        correctText: '正解。速度の向きは、<b>変位の向きと同じ</b>です。',
+        explanation: '速度の向きは、動いた向き——つまり変位の向きです。',
+        hints: ['Sさんが「どの向きに動いたか」を表している矢印はどれでしょう。'],
+        reveal: {
+          title: 'なぜ v と Δr は同じ向きなのか',
+          body: '<p><b>v ＝ Δr ÷ Δt</b></p>'
+              + '<p>Δt（かかった時間）は必ず正の数です。矢印を<b>正の数で割っただけ</b>なので、'
+              + '向きは変わりません。</p>'
+              + '<p>変わるのは<b>長さ</b>だけ。つまり「1マスが何を表すか」だけが変わります。'
+              + 'このことは ④ でもう一度出てきます。</p>'
+        }
+      }
+    ],
+    summary: {
+      title: 'ここまでの整理',
+      body: '<ol style="line-height:1.9">'
+          + '<li><b>r（位置ベクトル）</b>は、<b>基準点</b>と<b>その地点</b>の、どちらの情報も持っている</li>'
+          + '<li>はじめの r の先端から、あとの r の先端へ結んだ矢印を <b>Δr（変位ベクトル）</b> という</li>'
+          + '<li>Δr は「位置が<b>どれだけ変化したか</b>」の情報を持つ</li>'
+          + '<li><b>v の向きは Δr と同じ</b></li>'
+          + '</ol>',
+      button: '先へ進む'
+    }
+  },
+
   /* ===================== ②.5a 置き直してみる（最重要） ===================== */
   step25a: {
     title: '置き直してみる',
     minutes: 4,
-    passLine: { correct: 4, of: 4 },
+    passLine: { correct: 5, of: 5 },
     scaleLabel: '1マス = 1 km',
     intro: {
-      title: 'その矢印は、何を言っている矢印？',
-      body: '<p>画面に2本の矢印があります。課題を行う前に、それぞれが何を言っている矢印なのか、声に出して言ってみましょう。</p>'
+      title: '動かしてよい矢印と、動かしてはいけない矢印',
+      body: '<p>ベクトルには2つの種類があります。</p>'
+          + '<ul><li><b>自由ベクトル</b>　…　置き直して（平行移動して）よいもの</li>'
+          + '<li><b>束縛ベクトル</b>　…　置き直すと意味が壊れるもの</li></ul>'
+          + '<p>画面の2本は、どちらがどちらでしょう。まず予想して、そのあと<b>実際に動かして</b>確かめます。</p>'
+          + '<p>動かす前に、それぞれが何を言っている矢印なのか、声に出して言ってみましょう。</p>'
           + '<ul><li><b>位置ベクトル</b>（学校→駅）…「駅は、学校から x に +3・y に +1 のところにある」</li>'
           + '<li><b>変位ベクトル</b>（駅→公園）…「x に −5・y に +2 動いた」</li></ul>'
-          + '<p>声に出した文が、<b>課題を行った後でも成立しているのか</b>を確かめます。</p>'
     },
     items: [
+      {
+        // 名前を先に与え、予想を立てさせてから動かす。
+        // ここで当たるかどうかは重要ではなく、「動かして確かめる」動機をつくるのが目的。
+        id: 's25a-q0',
+        type: 'choice',
+        prompt: '予想してみよう',
+        question: '画面の2本は、どちらが<b>自由ベクトル</b>（動かしてよい）で、どちらが<b>束縛ベクトル</b>（動かせない）でしょう？',
+        scene: {
+          points: {
+            school:  { ...MAP.school,  role: 'origin' },
+            station: { ...MAP.station },
+            park:    { ...MAP.park }
+          },
+          vectors: [
+            { id: 'pos',  from: 'school',  to: 'station', style: 'position',     locked: true, label: '位置ベクトル' },
+            { id: 'disp', from: 'station', to: 'park',    style: 'displacement',               label: '変位ベクトル' }
+          ]
+        },
+        options: [
+          { key: 'ア', text: '位置ベクトルが自由、変位ベクトルが束縛', feedback: '逆かもしれません。次の画面で、実際に両方動かして確かめましょう。' },
+          { key: 'イ', text: '位置ベクトルが束縛、変位ベクトルが自由' },
+          { key: 'ウ', text: 'どちらも自由（どちらも動かしてよい）', feedback: '本当にそうでしょうか。次の画面で確かめましょう。' },
+          { key: 'エ', text: 'どちらも束縛（どちらも動かせない）', feedback: '本当にそうでしょうか。次の画面で確かめましょう。' }
+        ],
+        correctIndex: 1,
+        correctText: '予想できましたね。では、<b>本当にそうなるか</b>、実際に動かして確かめましょう。',
+        explanation: '位置ベクトルが束縛、変位ベクトルが自由です。次の画面で、その理由を自分の手で確かめます。'
+      },
       {
         id: 's25a-t1',
         type: 'explore-drag',
@@ -326,9 +452,12 @@ export const problems = {
     passLine: { correct: 2, of: 2 },
     scaleLabel: '1マス = 1 km',
     transition: {
-      title: 'ここから、話が変わります',
-      body: '<p>ここまでは「<b>矢印の置き場所</b>」の話でした。</p><p>ここからは「<b>基準そのものを取り替える</b>」話です。別の話なので、切り替えてください。</p>',
-      button: '切り替えました'
+      title: 'なぜ Δr は、動かしてよかったのか',
+      body: '<p>Δr は置き直してよい矢印でした。それは、<b>Δr が持っている情報が「置き場所」によらない</b>、'
+          + 'ということです。</p>'
+          + '<p>本当にそう言い切れるでしょうか。もっと乱暴なことをして確かめます。'
+          + '——<b>測る基準そのものを動かしてみましょう。</b></p>',
+      button: 'やってみる'
     },
     items: [
       {
@@ -338,11 +467,15 @@ export const problems = {
         unit: 'km',
         scene: {
           points: {
+            O0:      { x: 3, y: 3, label: 'はじめの O' },
             O:       { x: 3, y: 3, label: '基準点 O', role: 'origin', draggable: true },
             station: { ...MAP.station },
             park:    { ...MAP.park }
           },
           vectors: [
+            // はじめの基準点から引いた2本を、薄く残しておく。動かした結果と見くらべるため。
+            { id: 'g1',   from: 'O0',      to: 'station', style: 'position',     locked: false, opacity: 0.22 },
+            { id: 'g2',   from: 'O0',      to: 'park',    style: 'position',     locked: false, opacity: 0.22 },
             { id: 'pos1', from: 'O',       to: 'station', style: 'position',     locked: true,  label: 'O→駅' },
             { id: 'pos2', from: 'O',       to: 'park',    style: 'position',     locked: true,  label: 'O→公園' },
             { id: 'disp', from: 'station', to: 'park',    style: 'displacement', locked: false, label: '駅→公園' }
@@ -373,11 +506,14 @@ export const problems = {
         question: '基準点 O を動かしても変位ベクトルが変わらないのは、なぜですか？',
         scene: {
           points: {
-            O:       { x: 3, y: 3, label: '基準点 O', role: 'origin' },
+            O0:      { x: 3, y: 3, label: 'はじめの O' },
+            O:       { x: 6, y: 1, label: '基準点 O', role: 'origin' },
             station: { ...MAP.station },
             park:    { ...MAP.park }
           },
           vectors: [
+            { id: 'g1',   from: 'O0',      to: 'station', style: 'position',     locked: false, opacity: 0.22 },
+            { id: 'g2',   from: 'O0',      to: 'park',    style: 'position',     locked: false, opacity: 0.22 },
             { id: 'pos1', from: 'O',       to: 'station', style: 'position',     locked: true, label: 'O→駅' },
             { id: 'pos2', from: 'O',       to: 'park',    style: 'position',     locked: true, label: 'O→公園' },
             { id: 'disp', from: 'station', to: 'park',    style: 'displacement', label: '駅→公園' }
@@ -393,8 +529,15 @@ export const problems = {
         correctText: 'そのとおり。O→駅 と O→公園 が同じだけずれるので、その先端どうしを結んだ変位は動きません。',
         explanation: '変位は2本の位置ベクトルの差です。基準を動かすと2本とも同じだけずれるので、差は変わりません。',
         reveal: {
-          title: '次の時間の予告',
-          body: '<p>基準を取り替えるという考え方は、<b>次の時間にもう一度出てきます</b>。</p>'
+          title: 'ポイント：変化を表すベクトルは、移動できる',
+          body: '<p>Δr が持っているのは「<b>位置がどれだけ変化したか</b>」だけです。'
+              + '基準をどこに置こうと、その情報は変わりませんでした。</p>'
+              + '<p>だから <b>Δr は、どこに置き直してもよい</b>のです。'
+              + '②.5a で動かせたのは、これが理由でした。</p>'
+              + '<p><b>変化を表すベクトルは、移動できる。</b>'
+              + 'これは Δr だけの話ではありません。<b>速度ベクトルも、加速度ベクトルも移動できます。</b>'
+              + '——どれも「変化」を表す量だからです。</p>'
+              + '<p class="sym-note">基準を取り替えるという考え方は、<b>第3話でもう一度出てきます</b>。</p>'
         }
       }
     ]
@@ -682,7 +825,8 @@ export const problems = {
     title: '記号へ渡す',
     minutes: 4,
     scaleLabel: '1マス = 1 km',
-    prompt: '基準点 <b>O</b> は学校。図と式を見比べよう。どちらかをタップすると、両方が光ります。',
+    prompt: '基準点 <b>O</b> は学校。<b>まず図を見て答え、あとから式で確かめます。</b>'
+          + '<br><span style="font-size:15px;color:#4b5563">式や記号をタップすると、図の対応する矢印が光ります。</span>',
     // 図は data の座標をそのまま使う（学校＝基準点 O）
     origin: { x: 3, y: 3, label: 'O' },
     places: [
@@ -697,21 +841,41 @@ export const problems = {
     rule: '出発を <b>bef</b>、到着を <b>aft</b> と呼びます。'
         + '<b>矢印は bef → aft、式は aft − bef。</b>'
         + 'つまり <b>Δr ＝ r<sub>aft</sub> − r<sub>bef</sub></b>。添字は「基準 → 対象」の順に書きます。',
+    // ①直感 → ②bef → ③aft → ④式、の順で進む（js/steps/step6-symbol.js が順に出す）
+    quizValue: {
+      question: '① まず直感で。Sさんの<b>駅から公園への変位 Δr</b> を、向きと大きさで答えよう。',
+      answer: { x: -5, y: 2 },
+      retryHint: '図のマスを数えるだけで出ます。x はどちらへいくつ、y はどちらへいくつ？',
+      explain: '図のとおり <b>x に −5、y に +2</b>。これが答えです。'
+             + 'では、この答えを<b>式でも出せるか</b>を確かめていきましょう。'
+    },
+    coordBef: {
+      question: '② 出発（<b>bef</b>）は駅。基準点 O から見た <b>r<sub>駅</sub></b> の成分は？',
+      answer: { x: 3, y: 1 },
+      lit: 'rStation',
+      retryHint: 'O から駅へ、x にいくつ、y にいくつでしょう。',
+      explain: '<b>r<sub>駅</sub> ＝ (+3, +1)</b>。O から駅への位置ベクトルです。'
+    },
+    coordAft: {
+      question: '③ 到着（<b>aft</b>）は公園。基準点 O から見た <b>r<sub>公園</sub></b> の成分は？',
+      answer: { x: -2, y: 3 },
+      lit: 'rPark',
+      retryHint: 'O から公園へ。x は左向きなので −、y は上向きなので ＋ です。',
+      explain: '<b>r<sub>公園</sub> ＝ (−2, +3)</b>。O から公園への位置ベクトルです。'
+    },
     quizOrder: {
-      question: 'では、<b>公園から駅へ</b>の変位を式で書くと？',
+      question: '④ ①〜③で出した数を見くらべよう。Δr（駅 → 公園）を<b>式</b>で書くと？',
       options: [
-        { key: 'ア', text: 'r<sub>公園</sub> − r<sub>駅</sub>', feedback: 'それは「駅から公園へ」の式です。いまは公園が bef、駅が aft ですよ。' },
-        { key: 'イ', text: 'r<sub>駅</sub> − r<sub>公園</sub>', feedback: '' },
-        { key: 'ウ', text: 'r<sub>駅</sub> ＋ r<sub>公園</sub>', feedback: '足すと、どちらの地点でもない場所を指してしまいます。' }
+        { key: 'ア', text: 'r<sub>駅</sub> − r<sub>公園</sub>　（bef − aft）',
+          feedback: '計算すると (+3, +1) − (−2, +3) ＝ (+5, −2)。①で出した答えと<b>符号が逆</b>になります。' },
+        { key: 'イ', text: 'r<sub>公園</sub> − r<sub>駅</sub>　（aft − bef）' },
+        { key: 'ウ', text: 'r<sub>駅</sub> ＋ r<sub>公園</sub>',
+          feedback: '足すと、駅でも公園でもない場所を指してしまいます。' }
       ],
       correct: 1,
-      explain: '出発（bef）が公園、到着（aft）が駅。<b>aft − bef</b> なので r<sub>駅</sub> − r<sub>公園</sub> です。矢印も 公園→駅 の向きになります。'
-    },
-    quizValue: {
-      question: '駅から公園への変位を、<b>向きと大きさ</b>で答えよう。',
-      answer: { x: -5, y: 2 },
-      explain: 'aft − bef ＝ r<sub>公園</sub> − r<sub>駅</sub> ＝ (−2, 3) − (3, 1) ＝ <b>(−5, 2)</b>。'
-             + 'つまり <b>x に −5 km、y に +2 km</b>。引き算の答えが負になれば、その向きは −x（左）・−y（下）です。'
+      explain: '③ − ② ＝ (−2, +3) − (+3, +1) ＝ <b>(−5, +2)</b>。'
+             + '①で直感的に出した答えと、ぴったり一致しました。<br>'
+             + '<b>Δr ＝ r<sub>aft</sub> − r<sub>bef</sub>。矢印は bef → aft、式は aft − bef</b> です。'
     }
   },
 

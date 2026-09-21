@@ -3,7 +3,7 @@
 // 授業時間が足りないときは STEP_ORDER の1行をコメントアウトするだけでそのステップを飛ばせる。
 
 import { problems } from '../data/problems.js';
-import { FLOW, HINTS, TEXT, CANVAS } from '../data/config.js';
+import { FLOW, HINTS, TEXT, CANVAS, COLORS } from '../data/config.js';
 import { GridCanvas } from './core/canvas.js';
 import * as vec from './core/vector.js';
 import { ui } from './core/ui.js';
@@ -15,6 +15,7 @@ const STEP_ORDER = [
   'intro',
   'step1',
   'step2',
+  'stepv',
   'step25a',
   'step25b',
   'step6',      // 変位の記号。変位の話が続いているうちに固める（速度に入る前）
@@ -56,7 +57,7 @@ const CHAPTERS = [
 const COURSES = {
   ch1: {
     label: '第1話',
-    steps: ['intro', 'step1', 'step2', 'step25a', 'step25b', 'step6', 'step4', 'reflection'],
+    steps: ['intro', 'step1', 'step2', 'stepv', 'step25a', 'step25b', 'step6', 'step4', 'reflection'],
     endText: '<b>第1話おわり。</b>位置ベクトルと変位ベクトル、そして基準の話でした。',
     endHint: '矢印を動かしてよいかどうかは、その矢印が何を言っているかで決まりました。',
     next: { label: '発展へ進む →', href: 'index.html?course=ext' }
@@ -115,6 +116,7 @@ const STEP_FILES = {
   step3: './steps/step3-chain.js',
   step4: './steps/step4-velocity.js',
   step5: './steps/step5-compose.js',
+  stepv: './steps/stepv-velocity-dir.js',
   step6: './steps/step6-symbol.js',
   ext1: './steps/ext1-velocity.js',
   ext2: './steps/ext2-deltav.js',
@@ -202,6 +204,11 @@ async function boot() {
     // 直前のステップを前提にした文で、コース冒頭の説明と重複するため。
     // ④⑤の「速度の話に入ります」「動くものが2つ」は復習コースでも必要なので残す。
     if (state.course.key === 'relative' && id === 'step25b' && prob && prob.transition) prob = { ...prob, transition: null };
+    // 復習コースは7分しかないので、⑥は「直感 → 式」の2段だけにする。
+    // bef / aft の成分を1つずつ打たせる2段は、第1話で通っている前提。
+    if (state.course.key === 'relative' && id === 'step6' && prob) {
+      prob = { ...prob, coordBef: null, coordAft: null };
+    }
     state.steps.push({ id, label: mod.default.label || id, module: mod.default, problems: prob });
   }
 
@@ -821,6 +828,66 @@ HANDLERS['free-text'] = (step, item, meta, done) => {
     { label: '学習ログをコピー', onClick: () => ui.copy(storage.buildLog(labels)) },
     { label: '次へ', variant: 'primary', onClick: () => done({ correct: true }) }
   ]);
+};
+
+/* --- tap-select：画面の矢印をタップして選ぶ --- */
+HANDLERS['tap-select'] = (step, item, meta, done) => {
+  const scene = buildScene(item.scene);
+  const opts = item.options || [];
+  let attempts = 0;
+  let settled = false;
+
+  const finishItem = (correct) => {
+    settled = true;
+    ui.stopHints();
+    ui.actions([{ label: '次へ', variant: 'primary', onClick: async () => {
+      if (item.reveal) {
+        await ui.modal({ title: item.reveal.title || '', body: item.reveal.body || '',
+                         actions: [{ label: 'わかった', variant: 'primary' }] });
+      }
+      done({ correct });
+    } }]);
+  };
+
+  const pick = (id) => {
+    if (settled) return;
+    const opt = opts.find(o => o.vector === id);
+    if (!opt) return;
+    attempts++;
+    storage.recordAttempt(step.id, item.id, !!opt.correct);
+    const arrow = scene.arrows[id];
+    if (opt.correct) {
+      if (arrow) arrow.setColor(COLORS.correct);
+      ui.feedback(item.correctText || '正解です。', 'correct');
+      finishItem(true);
+      return;
+    }
+    if (arrow) {
+      const back = arrow.style.color;
+      arrow.setColor(COLORS.wrong);
+      setTimeout(() => { const a = scene.arrows[id]; if (a) a.setColor(back); }, 900);
+    }
+    ui.feedback(opt.feedback || 'それではありません。もう一度見てみましょう。', 'wrong');
+    if (attempts >= FLOW.maxAttempts) {
+      const right = opts.find(o => o.correct);
+      const ra = right && scene.arrows[right.vector];
+      if (ra) ra.setColor(COLORS.correct);
+      storage.recordPassedWithHelp(step.id, item.id);
+      ui.feedback(item.explanation || '正しい矢印に印をつけました。', 'info');
+      finishItem(false);
+    }
+  };
+
+  for (const o of opts) {
+    const arrow = scene.arrows[o.vector];
+    if (!arrow) continue;
+    arrow.hit.style.pointerEvents = 'stroke';
+    arrow.hit.style.cursor = 'pointer';
+    arrow.hit.addEventListener('pointerdown', (ev) => { ev.preventDefault(); pick(o.vector); });
+  }
+  ui.actions([]);
+  ui.feedback(item.hintText || '矢印そのものをタップしてください。', 'info');
+  ui.startHints({ hints: item.hints || [], onCount: () => storage.recordHint(step.id, item.id) });
 };
 
 /* --- text-answer：ことばを入力して答える（発展の「漢字三文字」など） --- */

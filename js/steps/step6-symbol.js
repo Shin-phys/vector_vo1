@@ -58,41 +58,23 @@ export default {
     rule.innerHTML = p.rule;
     bridge.append(rule);
 
-    /* ---- 問1：式の順（後 − 前） ---- */
-    const q1 = p.quizOrder;
-    let attempts = 0;
-    const list = ui.renderChoice(q1, (i, opt, btn) => {
-      attempts++;
-      if (i === q1.correct) {
-        btn.classList.add('is-correct');
-        [...list.children].forEach(c => c.disabled = true);
-        ctx.storage.recordAttempt('step6', 'order', true);
-        ui.feedback(q1.explain, 'correct');
-        setTimeout(askValue, 1500);
-      } else {
-        btn.classList.add('is-wrong'); btn.disabled = true;
-        if (attempts >= 2) {
-          ctx.storage.recordAttempt('step6', 'order', false);
-          [...list.children].forEach(c => c.disabled = true);
-          list.children[q1.correct].classList.add('is-correct');
-          ui.feedback(q1.explain, 'wrong');
-          setTimeout(askValue, 2400);
-        } else {
-          ui.feedback(opt.feedback || 'もう一度、出発と到着はどちらか考えよう。', 'wrong');
-        }
-      }
-    });
-    ui.feedback('まず、いまの図と式を見比べてから答えよう。', 'info');
+    /* ---- 進め方 ----
+       ①まず直感で Δr の数値を出す → ② bef の成分 → ③ aft の成分 → ④ 式を選ぶ。
+       先に答えを持っている状態で式を選ばせるので、式が「答えを再現する道具」になる。 */
 
-    /* ---- 問2：成分（数値で確かめる） ---- */
-    const q2 = p.quizValue;
-    let solved = false;
-    const askValue = () => {
+    // データに無い段はとばす（復習コースでは bef / aft の2段を省く）
+    let stage = 0;
+    const stages = ['value', 'bef', 'aft'].filter(k => {
+      const cfg = p[k === 'value' ? 'quizValue' : k === 'bef' ? 'coordBef' : 'coordAft'];
+      return !!cfg;
+    });
+
+    // 向きはボタン、大きさは数値。スマホの数字キーボードにはマイナスが無く、
+    // 符号を打たせると入力できない。向きを選ばせるほうが物理としても自然。
+    const askComponents = (cfg, key, onDone) => {
       const box = ui.el.interact;
       box.style.display = '';
-      box.innerHTML = `<p class="choice-question">${q2.question}</p>`;
-      // 向きはボタン、大きさは数値。スマホの数字キーボードにはマイナスが無く、
-      // 符号を打たせると入力できない。向きを選ばせるほうが物理としても自然。
+      box.innerHTML = `<p class="choice-question">${cfg.question}</p>`;
       let dirX = null, dirY = null;
       const gate = () => ui.setActionState('check', {
         disabled: !(ix.value !== '' && iy.value !== '' && dirX && dirY)
@@ -118,39 +100,82 @@ export default {
         inp.type = 'number'; inp.inputMode = 'numeric'; inp.min = '0'; inp.step = '1'; inp.placeholder = '?';
         inp.addEventListener('input', gate);
         const unit = document.createElement('span');
-        unit.className = 'unit'; unit.textContent = 'km';
+        unit.className = 'unit'; unit.textContent = cfg.unit || 'km';
         row.append(lab, pick, inp, unit);
         box.appendChild(row);
         return inp;
       };
       const ix = mkAxis('x', [{ id: 'plus', label: '＋（右）' }, { id: 'minus', label: '−（左）' }], v => dirX = v);
       const iy = mkAxis('y', [{ id: 'plus', label: '＋（上）' }, { id: 'minus', label: '−（下）' }], v => dirY = v);
-      let tries = 0;
+
+      let tries = 0, done = false;
       const settle = (ok) => {
-        solved = true;
-        ctx.storage.recordAttempt('step6', 'value', ok);
-        ui.feedback(q2.explain, ok ? 'correct' : 'wrong');
-        bridge.setLit('disp');
+        done = true;
+        ctx.storage.recordAttempt('step6', key, ok);
+        ui.feedback(cfg.explain, ok ? 'correct' : 'wrong');
+        if (cfg.lit) bridge.setLit(cfg.lit);
         ui.setActionState('check', { disabled: true });
         ui.setActionState('next', { disabled: false });
       };
       ui.actions([
         { id: 'check', label: '判定する', variant: 'primary', disabled: true, onClick: () => {
-            if (solved) return;
+            if (done) return;
             tries++;
             const vx = Math.abs(Number(ix.value)) * (dirX === 'minus' ? -1 : 1);
             const vy = Math.abs(Number(iy.value)) * (dirY === 'minus' ? -1 : 1);
-            const ok = vx === q2.answer.x && vy === q2.answer.y;
-            if (ok) settle(true);
+            if (vx === cfg.answer.x && vy === cfg.answer.y) settle(true);
             else if (tries >= 3) settle(false);
-            else ui.feedback('r<sub>公園</sub> − r<sub>駅</sub> を、成分ごとに引いてみよう。引き算の答えが負なら、その向きは −x（左）や −y（下）です。', 'wrong');
+            else ui.feedback(cfg.retryHint || 'もう一度、成分ごとに数えてみよう。', 'wrong');
           } },
-        { id: 'next', label: '次へ', disabled: true, onClick: () => ctx.complete(true) }
+        { id: 'next', label: '次へ', disabled: true, onClick: () => onDone() }
       ]);
       gate();
     };
 
-    ui.actions([{ id: 'next', label: '次へ', disabled: true, onClick: () => ctx.complete(true) }]);
+    /* ---- ④ 式を選ぶ。①〜③で出した数を根拠に選ばせる ---- */
+    const askOrder = () => {
+      const q = p.quizOrder;
+      ui.clearInteract();
+      let attempts = 0;
+      const list = ui.renderChoice(q, (i, opt, btn) => {
+        if (list.dataset.done) return;
+        attempts++;
+        if (i === q.correct) {
+          btn.classList.add('is-correct');
+          list.dataset.done = '1';
+          [...list.children].forEach(c => c.disabled = true);
+          ctx.storage.recordAttempt('step6', 'order', true);
+          ui.feedback(q.explain, 'correct');
+          bridge.setLit('disp');
+          ui.setActionState('next', { disabled: false });
+        } else {
+          btn.classList.add('is-wrong'); btn.disabled = true;
+          if (attempts >= 2) {
+            ctx.storage.recordAttempt('step6', 'order', false);
+            list.dataset.done = '1';
+            [...list.children].forEach(c => c.disabled = true);
+            list.children[q.correct].classList.add('is-correct');
+            ui.feedback(q.explain, 'wrong');
+            ui.setActionState('next', { disabled: false });
+          } else {
+            ui.feedback(opt.feedback || 'もう一度、出発（bef）と到着（aft）はどちらか考えよう。', 'wrong');
+          }
+        }
+      });
+      ui.actions([{ id: 'next', label: '次へ', variant: 'primary', disabled: true,
+                    onClick: () => ctx.complete(true) }]);
+    };
+
+    const nextStage = () => {
+      const key = stages[stage];
+      if (!key) return askOrder();
+      const cfg = p[key === 'value' ? 'quizValue' : key === 'bef' ? 'coordBef' : 'coordAft'];
+      stage++;
+      askComponents(cfg, key, nextStage);
+    };
+
+    ui.feedback('まず、いまの図を見て答えてみよう。式はあとで確かめます。', 'info');
+    nextStage();
   },
 
   unmount() {

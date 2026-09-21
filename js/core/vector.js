@@ -428,6 +428,7 @@ export class Scene {
         label: v.label, interactive: !!v.draggable, hitWidth: hitW
       });
       arrow.set(ends.from, ends.to);
+      if (v.opacity != null) arrow.setOpacity(v.opacity);   // 薄く残す「もとの矢印」用
       this.arrows[v.id] = arrow;
       // 登場アニメーション（③で「あとから継ぎ足した」と見せるため）。初回描画のみ。
       if (first && v.appearDelay) {

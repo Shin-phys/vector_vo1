@@ -4,7 +4,7 @@
 
 export default {
   id: 'step25a',
-  label: '②.5a',
+  label: '置き直す',
 
   async mount(root, ctx) {
     this._ctx = ctx;

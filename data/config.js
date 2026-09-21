@@ -51,7 +51,6 @@ export const HINTS = {
 // 進行
 export const FLOW = {
   maxAttempts: 3,              // 3回誤答したら解説を出して通す
-  passLineDefault: { correct: 2, of: 3 },
   advanceDelayMs: 700
 };
 

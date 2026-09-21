@@ -212,6 +212,8 @@ async function boot() {
     state.steps.push({ id, label: mod.default.label || id, module: mod.default, problems: prob });
   }
 
+  numberSteps(state.steps);
+  setupHome();
   setupSettings();
 
   const saved = storage.getCurrentStep(state.course.key);
@@ -236,6 +238,7 @@ function renderHome() {
     chapters: CHAPTERS.map(c => ({ ...c, done: storage.getSetting('done.' + c.key, false) === true })),
     onPick: (c) => { location.href = c.href || ('index.html?course=' + c.key); }
   });
+  setupHome();
   setupSettings();
 }
 
@@ -254,6 +257,17 @@ function teacherMode() { return storage.getSetting('teacherMode', false) === tru
  * 先に飛べるようにすると、順を追って考えさせる設計が崩れるため、
  * 全解放は先生モードのときだけ。
  */
+/** 導入と振り返り以外に、並び順で ①②③… を振る。データに番号を書かない。 */
+const CIRCLED = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫';
+function numberSteps(steps) {
+  let n = 0;
+  for (const st of steps) {
+    const plain = ['intro', 'courseIntro', 'reflection', 'reflection2'].includes(st.id);
+    st.display = plain ? st.label : (CIRCLED[n++] || '') + st.label;
+  }
+  return steps;
+}
+
 function renderStepBar(currentId) {
   ui.renderSteps(state.steps, currentId, {
     canJump: (i) => teacherMode() || i <= state.maxReached,
@@ -356,21 +370,12 @@ function completeStep(step, ok = true) {
 /* 新しい問題を既存の type で足すときはコードを触らなくてよい。                 */
 /* ===================================================================== */
 async function runItems(step, items, opts = {}) {
-  const passLine = (step.problems && step.problems.passLine) || FLOW.passLineDefault;
+  // 途中で切り上げる仕組みは置かない。出した問題は最後までやらせる。
+  // 「足止めしない」は各問題の側（3回まちがえたら解説を出して通す）で担保している。
   let correctCount = 0;
   for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    const res = await runItem(step, item, { index: i, total: items.length });
+    const res = await runItem(step, items[i], { index: i, total: items.length });
     if (res && res.correct) correctCount++;
-    const remaining = items.length - i - 1;
-    if (remaining > 0 && correctCount >= (passLine.correct || 99)) {
-      const choice = await ui.modal({
-        title: 'このステップは通過です',
-        body: `<p>${correctCount}問正解しました。残り${remaining}問に挑戦することもできます。</p>`,
-        actions: [{ label: 'もう1問やる', value: 'more' }, { label: '次のステップへ', value: 'next', variant: 'primary' }]
-      });
-      if (choice === 'next') break;
-    }
   }
   if (opts.onDone) await opts.onDone(correctCount);
   return correctCount;
@@ -601,8 +606,8 @@ HANDLERS['draw-vector'] = (step, item, meta, done) => {
 };
 
 /* --- draw-multi：1つの画面で複数の矢印を描き切る ---
-   targets を1本ずつ別問題にすると「このステップは通過です」で飛ばせてしまい、
-   そろった絵が最後まで出てこない。ここでは全部描くまで先へ進ませない。 */
+   1本ずつ別問題にすると、そろった絵が1画面に出てこない。
+   ここでは全部描くまで先へ進ませない。 */
 HANDLERS['draw-multi'] = (step, item, meta, done) => {
   const canvas = state.canvas;
   buildScene(item.scene || { points: {}, vectors: [] });
@@ -1064,6 +1069,13 @@ function normalizeAnswer(t) {
 }
 
 /* ---------- 設定（レイアウト手動切替・進捗リセット） ---------- */
+/** どの画面からでもトップ（話の選択）へ戻れるようにする。 */
+function setupHome() {
+  const btn = document.getElementById('homeBtn');
+  if (!btn) return;
+  btn.addEventListener('click', () => { location.href = 'index.html'; });
+}
+
 function setupSettings() {
   const btn = document.getElementById('settingsBtn');
   if (!btn) return;
@@ -1073,22 +1085,17 @@ function setupSettings() {
     const teacher = teacherMode();
     const v = await ui.modal({
       title: TEXT.settings,
-      body: `<p>画面レイアウト（現在：<b>${layout.profile.name}</b>／設定：${mode}）</p>
-             <p>作図の操作：<b>${layout.profile.drawMode === 'tap' ? '①始点→②終点をタップ' : '押したままドラッグ'}</b>
-                （設定：${dmode === 'auto' ? '自動' : dmode}）</p>
-             <p>先生モード：<b>${teacher ? 'ON' : 'OFF'}</b>
-                <span style="color:#4b5563;font-size:15px">
-                ONにすると、上の進捗バーからどのステップにも移動できます。
-                OFFのときは通過済みのステップにだけ戻れます。</span></p>`,
+      body: `<p class="settings-now">画面：<b>${layout.profile.name === 'phone' ? 'スマホ' : 'タブレット・PC'}</b>（設定：${mode === 'auto' ? '自動' : mode}）<br>
+                作図：<b>${layout.profile.drawMode === 'tap' ? 'タップ' : 'ドラッグ'}</b>（設定：${dmode === 'auto' ? '自動' : dmode}）<br>
+                先生モード：<b>${teacher ? 'ON' : 'OFF'}</b></p>
+             <p class="settings-group">画面レイアウト</p>`,
       actions: [
-        { label: '自動', value: 'auto' },
-        { label: 'スマホ', value: 'phone' },
-        { label: 'タブレット・PC', value: 'tablet' },
-        { label: '作図：タップ', value: 'draw-tap' },
+        { label: '画面：自動', value: 'auto' },
+        { label: '画面：スマホ', value: 'phone' },
+        { label: '画面：タブレット・PC', value: 'tablet' },
         { label: '作図：ドラッグ', value: 'draw-drag' },
-        { label: '作図：自動', value: 'draw-auto' },
-        { label: teacher ? '先生モードをOFF' : '先生モードをON', value: 'teacher' },
-        { label: 'トップ（話の選択）へ', value: 'home' },
+        { label: '作図：タップ', value: 'draw-tap' },
+        { label: teacher ? '先生モードを OFF' : '先生モードを ON（全ステップへ移動）', value: 'teacher' },
         { label: '第3話（相対速度）へ', value: 'vol2' },
         { label: '相対速度の前提だけ復習する', value: 'course' },
         { label: '進捗をリセット', value: 'reset' },
@@ -1101,7 +1108,6 @@ function setupSettings() {
       if (state.course) await mountStep(state.index);
       return;
     }
-    if (v === 'home') { location.href = 'index.html'; return; }
     if (v === 'vol2') { location.href = 'relative.html'; return; }
     if (v === 'course') { location.href = 'index.html?course=relative'; return; }
     if (v === 'teacher') {

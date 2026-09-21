@@ -4,7 +4,7 @@
 
 export default {
   id: 'ext1',
-  label: 'v をつくる',
+  label: '速度をつくる',
   async mount(root, ctx) {
     this._ctx = ctx;
     await ctx.runItems();

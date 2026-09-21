@@ -384,3 +384,20 @@ body.profile-phone #app.is-home{padding-bottom:16px;}
 
 /* 予想（採点しない）で選んだ選択肢 */
 .choice.is-picked{border-color:var(--accent);background:#eef4ff;}
+
+/* トップへもどるボタン（進捗バーの左端に常設） */
+#homeBtn{
+  flex:0 0 auto;min-width:var(--tap);min-height:36px;border:1px solid var(--line);
+  border-radius:10px;background:#fff;cursor:pointer;font-size:18px;line-height:1;
+}
+body.is-home #homeBtn{display:none;}
+
+/* スマホでは、モーダルのボタンを縦に積む（設定メニューが横並びで破綻していた） */
+body.profile-phone .modal-actions{flex-direction:column;align-items:stretch;gap:8px;}
+body.profile-phone .modal-actions .btn{width:100%;}
+body.profile-phone .modal-card{padding:16px;max-height:88vh;}
+body.profile-phone .modal-card h2{font-size:18px;}
+
+/* 設定メニュー：見出しで区切って読めるようにする */
+.settings-group{margin:14px 0 6px;font-size:14px;font-weight:700;color:var(--muted);}
+.settings-now{font-size:15px;color:var(--muted);margin:2px 0 0;}

@@ -3,7 +3,7 @@
 
 export default {
   id: 'step4',
-  label: '④',
+  label: '速度',
   async mount(root, ctx) {
     this._ctx = ctx;
     await ctx.runItems();

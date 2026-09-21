@@ -6,7 +6,7 @@
 
 export default {
   id: 'stepv',
-  label: 'v の向き',
+  label: '速度の向き',
 
   async mount(root, ctx) {
     this._ctx = ctx;

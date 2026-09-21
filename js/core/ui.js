@@ -89,12 +89,12 @@ export const ui = {
       b.className = 'step-chip';
       if (s.id === currentId) b.classList.add('is-current');
       else if (i < idx) b.classList.add('is-done');
-      b.textContent = s.label;
+      b.textContent = s.display || s.label;
       if (can) {
         b.type = 'button';
         b.classList.add('is-jumpable');
-        b.title = `${s.label} へもどる`;
-        b.setAttribute('aria-label', `${s.label} へ移動`);
+        b.title = `${s.display || s.label} へもどる`;
+        b.setAttribute('aria-label', `${s.display || s.label} へ移動`);
         b.addEventListener('click', () => opts.onJump(i));
       }
       box.appendChild(b);
@@ -378,7 +378,7 @@ export const ui = {
       card.className = 'modal-card';
       if (title) {
         const h = document.createElement('h2');
-        h.textContent = title;
+        h.innerHTML = title;        // ベクトル記号などのタグを通す（文言は自前のデータのみ）
         card.appendChild(h);
       }
       const b = document.createElement('div');

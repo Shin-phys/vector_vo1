@@ -3,7 +3,7 @@
 
 export default {
   id: 'step5',
-  label: '⑤',
+  label: '合成',
   async mount(root, ctx) {
     this._ctx = ctx;
     await ctx.runItems();

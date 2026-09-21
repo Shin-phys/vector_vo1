@@ -161,6 +161,8 @@ async function boot() {
     }
   });
 
+  setupHome();
+
   setupSettings();
   await mountScene(0);
 }
@@ -218,6 +220,13 @@ function finish() {
 }
 
 /* ---------- 設定 ---------- */
+/** どの画面からでもトップ（話の選択）へ戻れるようにする。 */
+function setupHome() {
+  const btn = document.getElementById('homeBtn');
+  if (!btn) return;
+  btn.addEventListener('click', () => { location.href = 'index.html'; });
+}
+
 function setupSettings() {
   const btn = document.getElementById('settingsBtn');
   if (!btn) return;

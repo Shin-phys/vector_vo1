@@ -3,7 +3,7 @@
 
 export default {
   id: 'step3',
-  label: '③',
+  label: 'つなぐ',
   async mount(root, ctx) {
     this._ctx = ctx;
     await ctx.runItems();

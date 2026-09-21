@@ -32,11 +32,11 @@ export default {
 
     // 位置ベクトル（基準 O から）と、その先端どうしを結ぶ変位
     bridge.arrow('rStation', O, st, 'position',
-      { main: 'r', sub: '駅', tail: '＝r bef', over: true,
-        at: { x: (O.x + st.x) / 2 + 0.35, y: (O.y + st.y) / 2 - 0.6 } });
+      { main: 'r', sub: 'bef', over: true,
+        at: { x: (O.x + st.x) / 2 + 0.3, y: (O.y + st.y) / 2 - 0.6 } });
     bridge.arrow('rPark', O, pk, 'position',
-      { main: 'r', sub: '公園', tail: '＝r aft', over: true,
-        at: { x: (O.x + pk.x) / 2 - 0.75, y: (O.y + pk.y) / 2 + 0.45 } });
+      { main: 'r', sub: 'aft', over: true,
+        at: { x: (O.x + pk.x) / 2 - 0.6, y: (O.y + pk.y) / 2 + 0.45 } });
     bridge.arrow('disp', st, pk, 'resultant',
       { styleOverride: { ...VECTOR_STYLES.resultant, color: VECTOR_STYLES.displacement.color },
         main: '駅公園', over: true,
@@ -48,17 +48,19 @@ export default {
 
     bridge.tidy();
 
-    bridge.setFormula([
-      { id: 'disp', main: 'Δr', over: true }, { op: '＝' },
-      { id: 'rPark', main: 'r', sub: 'aft', over: true }, { op: '−' },
-      { id: 'rStation', main: 'r', sub: 'bef', over: true }
-    ]);
-    bridge.setLegend(p.terms);
-
-    const rule = document.createElement('p');
-    rule.className = 'bridge-rule';
-    rule.innerHTML = p.rule;
-    bridge.append(rule);
+    // 式は「④で式を選んだあと」に出す。先に見せると答えそのものになる。
+    const showFormula = () => {
+      bridge.setFormula([
+        { id: 'disp', main: 'Δr', over: true }, { op: '＝' },
+        { id: 'rPark', main: 'r', sub: 'aft', over: true }, { op: '−' },
+        { id: 'rStation', main: 'r', sub: 'bef', over: true }
+      ]);
+      bridge.setLegend(p.terms);
+      const rule = document.createElement('p');
+      rule.className = 'bridge-rule';
+      rule.innerHTML = p.rule;
+      bridge.append(rule);
+    };
 
     /* ---- 進め方 ----
        ①まず直感で Δr の数値を出す → ② bef の成分 → ③ aft の成分 → ④ 式を選ぶ。
@@ -172,6 +174,7 @@ export default {
           if (i === q.correct) {
             b.classList.add('is-correct'); shut();
             ctx.storage.recordAttempt('step6', 'order', true);
+            showFormula();
             ui.feedback(q.explain, 'correct');
             bridge.setLit('disp');
             ui.setActionState('next', { disabled: false });
@@ -181,6 +184,7 @@ export default {
               ctx.storage.recordAttempt('step6', 'order', false);
               shut();
               list.children[q.correct].classList.add('is-correct');
+              showFormula();
               ui.feedback(q.explain, 'wrong');
               ui.setActionState('next', { disabled: false });
             } else {
@@ -203,7 +207,7 @@ export default {
       askComponents(cfg, key, nextStage);
     };
 
-    ui.feedback('まず図を見て答えてみよう。式はあとで確かめます。', 'info');
+    ui.feedback('図を見て答えよう。式はあとで確かめる。', 'info');
     nextStage();
   },
 

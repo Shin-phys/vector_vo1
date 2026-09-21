@@ -123,8 +123,8 @@ export default {
         box.appendChild(row);
         return inp;
       };
-      const ix = mkAxis('東西', [{ id: 'east', label: '東へ' }, { id: 'west', label: '西へ' }], v => dirX = v);
-      const iy = mkAxis('南北', [{ id: 'north', label: '北へ' }, { id: 'south', label: '南へ' }], v => dirY = v);
+      const ix = mkAxis('x', [{ id: 'plus', label: '＋（右）' }, { id: 'minus', label: '−（左）' }], v => dirX = v);
+      const iy = mkAxis('y', [{ id: 'plus', label: '＋（上）' }, { id: 'minus', label: '−（下）' }], v => dirY = v);
       let tries = 0;
       const settle = (ok) => {
         solved = true;
@@ -138,12 +138,12 @@ export default {
         { id: 'check', label: '判定する', variant: 'primary', disabled: true, onClick: () => {
             if (solved) return;
             tries++;
-            const vx = Math.abs(Number(ix.value)) * (dirX === 'west' ? -1 : 1);
-            const vy = Math.abs(Number(iy.value)) * (dirY === 'south' ? -1 : 1);
+            const vx = Math.abs(Number(ix.value)) * (dirX === 'minus' ? -1 : 1);
+            const vy = Math.abs(Number(iy.value)) * (dirY === 'minus' ? -1 : 1);
             const ok = vx === q2.answer.x && vy === q2.answer.y;
             if (ok) settle(true);
             else if (tries >= 3) settle(false);
-            else ui.feedback('r<sub>公園</sub> − r<sub>駅</sub> を、成分ごとに引いてみよう。引いた答えが負なら、向きは西または南です。', 'wrong');
+            else ui.feedback('r<sub>公園</sub> − r<sub>駅</sub> を、成分ごとに引いてみよう。引き算の答えが負なら、その向きは −x（左）や −y（下）です。', 'wrong');
           } },
         { id: 'next', label: '次へ', disabled: true, onClick: () => ctx.complete(true) }
       ]);

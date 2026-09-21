@@ -2,7 +2,7 @@
 // 第2弾（相対速度）の問題データ。
 //
 // 速度は「方眼のマス／秒」で持つ。表示上の速さは  |v| × unitScale [unit]。
-// 例：vel {x:2,y:0} かつ unitScale:10 → 東向き 20 m/s
+// 例：vel {x:2,y:0} かつ unitScale:10 → +x 向き 20 m/s
 //
 // dimension は data/config.js の relativeConfig.dimension で切り替える（既定 "1d"）。
 
@@ -38,7 +38,7 @@ const PROBLEMS_1D = [
     ...BASE_1D,
     id: 'r1',
     title: '同じ向き・Aが遅い',
-    setup: '同じ向き（東）に、<b>Aは20 m/s、Bは30 m/s</b>。',
+    setup: '同じ向き（+x）に、<b>Aは20 m/s、Bは30 m/s</b>。',
     question: '<b>Aから見ると</b>、Bはどう動いて見える？',
     bodies: [
       { id: 'A', label: '車A', kind: 'car', color: '#2563eb', pos: { x: 6, y: 2.6 }, vel: { x: 2, y: 0 } },
@@ -52,7 +52,7 @@ const PROBLEMS_1D = [
     ...BASE_1D,
     id: 'r2',
     title: '同じ向き・Aが速い（予測を裏切る問題）',
-    setup: '同じ向き（東）に、<b>Aは30 m/s、Bは20 m/s</b>。',
+    setup: '同じ向き（+x）に、<b>Aは30 m/s、Bは20 m/s</b>。',
     question: '<b>Aから見ると</b>、Bはどう動いて見える？',
     bodies: [
       { id: 'A', label: '車A', kind: 'car', color: '#2563eb', pos: { x: 6, y: 2.6 }, vel: { x: 3, y: 0 } },
@@ -60,13 +60,13 @@ const PROBLEMS_1D = [
     ],
     answer: { x: -1, y: 0 },
     expectWord: 'Bは後ろへ下がって見える',
-    reveal: 'Bは東へ進んでいるのに、Aから見ると<b>後ろ（西）へ 10 m/s</b> で下がって見えます。'
+    reveal: 'Bは +x へ進んでいるのに、Aから見ると<b>後ろ（−x）へ 10 m/s</b> で下がって見えます。'
   },
   {
     ...BASE_1D,
     id: 'r3',
     title: '向かい合う',
-    setup: '向かい合って、<b>Aは東へ20 m/s、Bは西へ10 m/s</b>。',
+    setup: '向かい合って、<b>Aは +x に 20 m/s、Bは −x に 10 m/s</b>。',
     question: '<b>Aから見ると</b>、Bはどう動いて見える？',
     bodies: [
       { id: 'A', label: '車A', kind: 'car', color: '#2563eb', pos: { x: 6,  y: 2.6 }, vel: { x: 2,  y: 0 } },
@@ -74,7 +74,7 @@ const PROBLEMS_1D = [
     ],
     answer: { x: -3, y: 0 },
     expectWord: 'どちらの速さより速く近づいて見える',
-    reveal: 'Aから見るとBは<b>西向き 30 m/s</b>。どちらの車の速さよりも速く近づいて見えます。'
+    reveal: 'Aから見るとBは<b>−x 向き 30 m/s</b>。どちらの車の速さよりも速く近づいて見えます。'
   }
 ];
 
@@ -101,22 +101,22 @@ const PROBLEMS_2D = [
   {
     ...BASE_2D,
     id: 'r1-2d',
-    title: '斜めに交差する（Aは東、Bは北）',
-    setup: '上から見た図。<b>Aは東へ20 m/s、Bは北へ20 m/s</b>。',
+    title: '斜めに交差する（Aは +x、Bは +y）',
+    setup: '上から見た図。<b>Aは +x に 20 m/s、Bは +y に 20 m/s</b>。',
     question: '<b>Aから見ると</b>、Bはどう動いて見える？',
     bodies: [
       { id: 'A', label: 'A', kind: 'dot', color: '#2563eb', pos: { x: 5, y: 9 }, vel: { x: 2, y: 0 } },
       { id: 'B', label: 'B', kind: 'dot', color: '#dc2626', pos: { x: 12, y: 5 }, vel: { x: 0, y: 2 } }
     ],
     answer: { x: -2, y: 2 },
-    expectWord: '北西向きに見える',
-    reveal: 'Aから見るとBは<b>北西向き</b>（西へ20、北へ20）に動いて見えます。'
+    expectWord: '左上（x −、y ＋）の向きに見える',
+    reveal: 'Aから見るとBは<b>左上の向き</b>（x に −20、y に +20）に動いて見えます。'
   },
   {
     ...BASE_2D,
     id: 'r2-2d',
     title: '川を渡る舟',
-    setup: '川は<b>東へ10 m/s</b>。舟は水に対して<b>北へ20 m/s</b>。',
+    setup: '川は<b>+x に 10 m/s</b>。舟は水に対して<b>+y に 20 m/s</b>。',
     question: '<b>流れに乗って見ると</b>、舟はどう動いて見える？',
     observer: 'W',
     bodies: [
@@ -124,22 +124,22 @@ const PROBLEMS_2D = [
       { id: 'S', label: '舟',                     kind: 'boat', color: '#dc2626', pos: { x: 9, y: 4 }, vel: { x: 1, y: 2 } }
     ],
     answer: { x: 0, y: 2 },
-    expectWord: 'まっすぐ北へ進んで見える',
-    reveal: '水と一緒に流れている人から見ると、舟は<b>まっすぐ北へ 20 m/s</b>。斜めには見えません。'
+    expectWord: 'まっすぐ +y へ進んで見える',
+    reveal: '水と一緒に流れている人から見ると、舟は<b>まっすぐ +y に 20 m/s</b>。斜めには見えません。'
   },
   {
     ...BASE_2D,
     id: 'r3-2d',
     title: '追い越しながらすれ違う',
-    setup: '<b>Aは北東へ、Bは東へ</b>進みます。',
+    setup: '<b>Aは右上（x ＋・y ＋）へ、Bは +x へ</b>進みます。',
     question: '<b>Aから見ると</b>、Bはどう動いて見える？',
     bodies: [
       { id: 'A', label: 'A', kind: 'dot', color: '#2563eb', pos: { x: 4, y: 5 }, vel: { x: 2, y: 2 } },
       { id: 'B', label: 'B', kind: 'dot', color: '#dc2626', pos: { x: 5, y: 11 }, vel: { x: 3, y: 0 } }
     ],
     answer: { x: 1, y: -2 },
-    expectWord: '南東向きに見える',
-    reveal: 'Aから見るとBは<b>南東向き</b>（東へ10、南へ20）に動いて見えます。'
+    expectWord: '右下（x ＋、y −）の向きに見える',
+    reveal: 'Aから見るとBは<b>右下の向き</b>（x に +10、y に −20）に動いて見えます。'
   }
 ];
 
@@ -202,14 +202,14 @@ export const symbolScene = {
     { id: 'vA',  tex: 'v<sub>A</sub>',  label: 'Aの速度（地面から見て）', arrow: 'A' }
   ],
   quiz: {
-    question: 'Aの速度が<b>東向き 20 m/s</b>、Bの速度が<b>東向き 30 m/s</b> のとき、Aから見たBの速度は？',
+    question: 'Aの速度が<b>+x 向き 20 m/s</b>、Bの速度が<b>+x 向き 30 m/s</b> のとき、Aから見たBの速度は？',
     unit: 'm/s',
     answerValue: 10,
     answerDirection: 'east',
     directions: [
-      { id: 'east', label: '東向き' },
-      { id: 'west', label: '西向き' }
+      { id: 'east', label: '+x 向き' },
+      { id: 'west', label: '−x 向き' }
     ],
-    explain: 'v<sub>AB</sub> = v<sub>B</sub> − v<sub>A</sub> = 30 − 20 = <b>10</b>。符号が＋なので<b>東向き</b>。'
+    explain: 'v<sub>AB</sub> = v<sub>B</sub> − v<sub>A</sub> = 30 − 20 = <b>10</b>。符号が＋なので<b>+x 向き</b>。'
   }
 };

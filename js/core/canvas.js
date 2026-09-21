@@ -108,6 +108,39 @@ export class GridCanvas {
       svgEl('line', { x1: 0, y1: i, x2: n, y2: i, stroke: col, 'stroke-width': w }, g);
     }
     svgEl('rect', { x: 0, y: 0, width: n, height: n, fill: 'none', stroke: COLORS.axis, 'stroke-width': 0.04 }, g);
+    this.drawAxisHints(g);
+  }
+
+  /**
+   * 方眼の外側に +x / +y の向きを示す。
+   * 基準点は問題によって動くので、これは「座標軸」ではなく<b>向きの目印</b>。
+   * 成分を ±x / ±y で読ませるので、どちらが正かは常に画面に出ている必要がある。
+   */
+  drawAxisHints(g) {
+    const n = this.gridSize;
+    const c = COLORS.axis;
+    const arrow = (x1, y1, x2, y2) => {
+      svgEl('line', { x1, y1, x2, y2, stroke: c, 'stroke-width': 0.05, 'stroke-linecap': 'round' }, g);
+      const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy);
+      const ux = dx / L, uy = dy / L, px = -uy, py = ux, h = 0.22, w = 0.11;
+      svgEl('path', {
+        d: `M ${x2} ${y2} L ${x2 - ux * h + px * w} ${y2 - uy * h + py * w} L ${x2 - ux * h - px * w} ${y2 - uy * h - py * w} Z`,
+        fill: c
+      }, g);
+    };
+    const label = (x, y, text) => {
+      const t = svgEl('text', {
+        x, y, 'font-size': CANVAS.fontSize * 0.95, fill: c, 'font-weight': '700',
+        'text-anchor': 'middle', 'dominant-baseline': 'middle'
+      }, g);
+      t.textContent = text;
+    };
+    // 下辺の外側：+x は右向き（画面座標なので y = n + 余白）
+    arrow(0.15, n + 0.5, 1.35, n + 0.5);
+    label(1.85, n + 0.5, '+x');
+    // 左辺の外側：+y は上向き（画面座標では y が小さくなる向き）
+    arrow(-0.5, n - 0.15, -0.5, n - 1.35);
+    label(-0.5, n - 1.8, '+y');
   }
 
   /** マウスホバーで格子点をハイライト（PC/タブレット用。呼び出し側で有効化） */

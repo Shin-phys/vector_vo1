@@ -3,7 +3,7 @@
 
 import { STORAGE_KEY } from '../../data/config.js';
 
-const EMPTY = { currentStep: null, steps: {}, settings: {}, reflection: '', startedAt: null };
+const EMPTY = { currentStep: null, courses: {}, steps: {}, settings: {}, reflection: '', startedAt: null };
 
 function load() {
   try {
@@ -24,8 +24,16 @@ function save() {
 export const storage = {
   get state() { return state; },
 
-  getCurrentStep() { return state.currentStep; },
-  setCurrentStep(id) { state.currentStep = id; save(); },
+  // scope を渡すと話ごとに別々の進捗として保存する（第1話・発展・第2話を行き来できるように）
+  getCurrentStep(scope) {
+    if (scope) return (state.courses || {})[scope] || null;
+    return state.currentStep;
+  },
+  setCurrentStep(id, scope) {
+    if (scope) { state.courses = state.courses || {}; state.courses[scope] = id; }
+    else state.currentStep = id;
+    save();
+  },
 
   getSetting(key, fallback = null) {
     return Object.prototype.hasOwnProperty.call(state.settings, key) ? state.settings[key] : fallback;

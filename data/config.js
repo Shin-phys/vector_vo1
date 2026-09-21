@@ -65,8 +65,9 @@ export const SNAP = {
 // スマホは tap が既定。ドラッグは指を離した瞬間に確定してしまい、
 // 始点が指で隠れたまま決まってしまうため。⚙から手動で変えられる。
 export const layoutProfiles = {
-  phone:  { gridSize: 8,  snapRadius: 28, touchOffsetY: 18, minHitSize: 44, orientation: 'portrait', magnifier: true,  drawMode: 'tap'  },
-  tablet: { gridSize: 10, snapRadius: 16, touchOffsetY: 0,  minHitSize: 32, orientation: 'any',      magnifier: false, drawMode: 'drag' }
+  // snapRadius は「画面に見えている点」への吸着半径(px)。スマホはかなり甘くとる。
+  phone:  { gridSize: 8,  snapRadius: 46, touchOffsetY: 18, minHitSize: 44, orientation: 'portrait', magnifier: true,  drawMode: 'drag' },
+  tablet: { gridSize: 10, snapRadius: 24, touchOffsetY: 0,  minHitSize: 32, orientation: 'any',      magnifier: false, drawMode: 'drag' }
 };
 
 export const LAYOUT = {

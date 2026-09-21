@@ -23,17 +23,23 @@ export function angleBetween(a, b) {
   return Math.acos(c) * 180 / Math.PI;
 }
 
-/** 成分と大きさの日本語表記 */
+/** 符号つきの数。0 は符号なし。マイナスは見やすい「−」を使う。 */
+export function sgn(n) {
+  const v = Math.round(n * 100) / 100;
+  if (v > 0) return '+' + v;
+  if (v < 0) return '−' + Math.abs(v);
+  return '0';
+}
+
+/**
+ * 成分と大きさの表記。
+ * 東西南北は使わず、±x / ±y で書く（方角の言い換えを挟まずに符号を読ませるため）。
+ */
 export function describe(vec, unit = '') {
-  const dx = Math.round(vec.x * 100) / 100;
-  const dy = Math.round(vec.y * 100) / 100;
-  const ew = dx === 0 ? '' : (dx > 0 ? `東へ ${Math.abs(dx)}` : `西へ ${Math.abs(dx)}`);
-  const ns = dy === 0 ? '' : (dy > 0 ? `北へ ${Math.abs(dy)}` : `南へ ${Math.abs(dy)}`);
-  const parts = [ew, ns].filter(Boolean);
   const mag = Math.round(V.len(vec) * 100) / 100;
   return {
-    components: `(${dx}, ${dy})`,
-    words: parts.length ? parts.join('、') : '移動なし',
+    components: `(${sgn(vec.x)}, ${sgn(vec.y)})`,
+    words: `x ${sgn(vec.x)}　y ${sgn(vec.y)}`,
     magnitude: `${mag}${unit ? ' ' + unit : ''}`
   };
 }
@@ -143,11 +149,12 @@ function isSumOfLengths(u, legs) {
 /* ---------- 作図ツール（矢印を1本描く） ----------
    2つのやり方を持つ。どちらを使うかは profile.drawMode（'tap' | 'drag'）。
 
-   tap  … ①始点をタップ → ②終点をタップ。スマホの既定。
-          ドラッグは指を離した瞬間に確定してしまい、始点が指で隠れたまま決まる。
-          タップなら1点目がスナップ後の位置に残るので、違えば打ち直せる。
-          長押しメニューとも競合しない。
-   drag … 押したまま引く。タブレット・PC の既定。
+   drag … 押したまま引く。すべての端末の既定。
+          「矢印を引く」という動作そのものが学習内容なので、こちらを基本にする。
+          スマホで始点・終点がずれる問題は、画面に見えている点への甘い吸着
+          （snapPoint / profile.snapRadius）で受け止める。
+   tap  … ①始点をタップ → ②終点をタップ。⚙メニューから選べる予備の方式。
+          指の震えでドラッグが途切れてしまう生徒のための逃げ道として残してある。
 */
 export class DrawTool {
   /**
@@ -188,6 +195,26 @@ export class DrawTool {
     // 指で隠れるぶんだけ上にずらす。tap 方式は打ち直せるので、ずらしは控えめでよい。
     const offY = (ev.pointerType === 'touch') ? (this.profile.touchOffsetY || 0) : 0;
     const raw = this.canvas.fromClient(ev.clientX, ev.clientY - offY);
+    return this.snapPoint(raw, ev.pointerType);
+  }
+
+  /**
+   * 吸着。画面に見えている点（基準点・目印・シーンの点）が近くにあれば、そちらを優先して吸いつく。
+   * スマホは指が太く先端も隠れるので、半径をかなり甘くとる（profile.snapRadius, px）。
+   * 近くに点が無ければ、これまでどおり格子点へ丸める。
+   */
+  snapPoint(raw, pointerType = 'mouse') {
+    const mags = this.opts.magnets || [];
+    if (mags.length) {
+      let r = this.canvas.pxToUnits(this.profile.snapRadius || 0);
+      if (pointerType === 'mouse') r *= 0.6;      // マウスは正確なので控えめに
+      let best = null, bd = r;
+      for (const m of mags) {
+        const d = V.dist(raw, m);
+        if (d <= bd) { bd = d; best = m; }
+      }
+      if (best) return { x: best.x, y: best.y };
+    }
     return this.canvas.snap(raw);
   }
 
@@ -564,6 +591,19 @@ export const CONDITIONS = {
     const ea = scene.vectorEnds(a), eb = scene.vectorEnds(b);
     const d = V.dist(ea.to, eb.from);
     return { ok: d <= (cfg.tolerance ?? 0.01), distance: d };
+  },
+  /** 指定した矢印の始点がすべて同じ点にそろっているか（発展：速度ベクトルの始点そろえ） */
+  vectorsShareStart(scene, cfg) {
+    const ids = cfg.of || [];
+    if (ids.length < 2) return { ok: false };
+    const tol = cfg.tolerance ?? 0.01;
+    const target = cfg.at ? scene.point(cfg.at) : scene.vectorEnds(ids[0]).from;
+    let worst = 0;
+    for (const id of ids) {
+      const d = V.dist(scene.vectorEnds(id).from, target);
+      if (d > worst) worst = d;
+    }
+    return { ok: worst <= tol, worst };
   },
   /** 2つの出発点が離れているか（課題2で「離れた場所」を担保する） */
   pointsApart(scene, cfg) {

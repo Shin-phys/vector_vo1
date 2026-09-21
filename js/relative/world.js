@@ -73,15 +73,17 @@ export function speedValue(world, v) {
   return Math.round(len(v) * world.unitScale * 10) / 10;
 }
 
+/** 向きは方角ではなく ±x / ±y で言う（第1話からの表記に合わせる）。 */
 export function directionWord(world, v) {
   if (isZero(v, 1e-6)) return '動かない';
-  if (world.dimension === '1d') return v.x > 0 ? '東向き' : '西向き';
-  const ew = v.x === 0 ? '' : (v.x > 0 ? '東' : '西');
-  const ns = v.y === 0 ? '' : (v.y > 0 ? '北' : '南');
-  return (ns + ew || '') + '向き';
+  if (world.dimension === '1d') return v.x > 0 ? '+x 向き' : '−x 向き';
+  const ew = v.x === 0 ? '' : (v.x > 0 ? '+x' : '−x');
+  const ns = v.y === 0 ? '' : (v.y > 0 ? '+y' : '−y');
+  if (ew && ns) return `${ew}・${ns} の向き`;
+  return (ew || ns) + ' 向き';
 }
 
-/** 「東向き 30 m/s」 */
+/** 「+x 向き 30 m/s」 */
 export function velocityText(world, v) {
   if (isZero(v, 1e-6)) return `0 ${world.unit}`;
   return `${directionWord(world, v)} ${speedValue(world, v)} ${world.unit}`;

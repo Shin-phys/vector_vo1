@@ -137,6 +137,47 @@ export const ui = {
     }
   },
 
+  /**
+   * トップページ（話の選択）。レッスンの画面部品を隠して、カードだけを出す。
+   * chapters: [{key,label,title,lead,minutes,href,done}]
+   */
+  renderHome({ title, lead, chapters = [], onPick } = {}) {
+    document.body.classList.add('is-home');
+    this.el.steps.innerHTML = '';
+    this.setScale('');
+    this.showCanvas(false);
+    this.setReadout([]);
+    this.feedback('');
+    this.actions([]);
+    this.setPrompt('');
+
+    const box = this._interact();
+    box.innerHTML = '';
+    const head = document.createElement('div');
+    head.className = 'home-head';
+    head.innerHTML = `<h1>${title || ''}</h1>${lead ? `<p>${lead}</p>` : ''}`;
+    box.appendChild(head);
+
+    const list = document.createElement('div');
+    list.className = 'home-list';
+    for (const c of chapters) {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'home-card' + (c.done ? ' is-done' : '');
+      card.innerHTML =
+        `<span class="home-label">${c.label}</span>` +
+        `<span class="home-title">${c.title}</span>` +
+        (c.lead ? `<span class="home-lead">${c.lead}</span>` : '') +
+        `<span class="home-meta">${c.minutes ? `約${c.minutes}分` : ''}${c.done ? '　✓ 通過' : ''}</span>`;
+      card.addEventListener('click', () => onPick && onPick(c));
+      list.appendChild(card);
+    }
+    box.appendChild(list);
+    return list;
+  },
+
+  exitHome() { document.body.classList.remove('is-home'); },
+
   showCanvas(show) {
     this.el.canvasHost.style.display = show ? '' : 'none';
     this.el.scale.style.display = show && this.el.scale.textContent ? '' : 'none';

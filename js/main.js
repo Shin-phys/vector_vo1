@@ -10,7 +10,7 @@ import { ui } from './core/ui.js';
 import { storage } from './core/storage.js';
 import { layout } from './core/layout.js';
 
-/* ===== ステップの並び順（1行コメントアウトで飛ばせる） ===== */
+/* ===== 全ステップの並び（各話はここから必要な分を取り出して使う） ===== */
 const STEP_ORDER = [
   'intro',
   'step1',
@@ -18,20 +18,76 @@ const STEP_ORDER = [
   'step25a',
   'step25b',
   'step6',      // 変位の記号。変位の話が続いているうちに固める（速度に入る前）
-  'step3',
   'step4',
+  'ext1', 'ext2', 'ext3',
+  'step3',
   'step5',
   'reflection'
 ];
 
-/* ===== 復習コース =====
-   相対速度（第2弾）だけを単独で扱いたいときに、その前提だけを短く復習するための並び。
-   index.html?course=relative で起動する。
-     step25b … 原点を変えても変位は変わらない（第2弾シーン0の宣言が受けている）
-     step4   … 速度ベクトル（青い矢印と目盛の読み方）
-     step5   … 合成・差の作図（相対速度の作図そのもの）
-   終わると、そのまま relative.html へ進める。 */
+/* ===== トップページに並べる「話」 =====
+   カードの順番がそのまま授業の順番。minutes は目安。
+   href を書いたものは別ページ（相対速度）へ飛ぶ。 */
+const CHAPTERS = [
+  {
+    key: 'ch1', label: '第1話', minutes: 34,
+    title: 'Sさんは、どこにいる？　どれだけ動いた？',
+    lead: '位置ベクトルと変位ベクトル。動かしてよい矢印はどちらか。基準を取り替えると何が変わるか。'
+  },
+  {
+    key: 'ext', label: '発展', minutes: 10,
+    title: '変位ベクトルを拡張すると見えてくること 〜斜方投射を題材に〜',
+    lead: '「先端どうしを結ぶ」を速度にも使ってみる。そこから見えてくるものに、名前をつけます。'
+  },
+  {
+    key: 'ch2', label: '第2話', minutes: 11,
+    title: 'ベクトルの足し算はどんな時にでてくるの？',
+    lead: '変位をつなぐ。速度を合成する。足し算が必要になる場面を自分で作ります。'
+  },
+  {
+    key: 'relative', label: '第3話', minutes: 15, href: 'relative.html',
+    title: '相対速度 — 基準を「動いている物体」に取り替える',
+    lead: '止まって見ているか、一緒に動きながら見ているか。同じ運動が違って見えます。'
+  }
+];
+
+/* ===== 話ごとのステップの並び =====
+   授業時間が足りないときは、該当する話の steps から1行コメントアウトするだけで飛ばせる。 */
 const COURSES = {
+  ch1: {
+    label: '第1話',
+    steps: ['intro', 'step1', 'step2', 'step25a', 'step25b', 'step6', 'step4', 'reflection'],
+    endText: '<b>第1話おわり。</b>位置ベクトルと変位ベクトル、そして基準の話でした。',
+    endHint: '矢印を動かしてよいかどうかは、その矢印が何を言っているかで決まりました。',
+    next: { label: '発展へ進む →', href: 'index.html?course=ext' }
+  },
+
+  ext: {
+    label: '発展',
+    intro: `<b>変位ベクトルを拡張すると見えてくること</b><br>
+            〜斜方投射を題材に〜<br><br>
+            第1話で、変位は「2つの位置ベクトルの先端どうしを結んだ矢印」でした。<br>
+            同じことを <b>速度ベクトル</b> にもやってみます。何が出てくるでしょう。`,
+    startLabel: 'はじめる',
+    steps: ['ext1', 'ext2', 'ext3'],
+    endText: '<b>発展おわり。</b>速度の変化をつないだ先に、加速度がありました。',
+    endHint: '同じ「先端どうしを結ぶ」が、位置にも速度にも使えました。',
+    next: { label: '第2話へ進む →', href: 'index.html?course=ch2' }
+  },
+
+  ch2: {
+    label: '第2話',
+    intro: `<b>ベクトルの足し算は、どんな時にでてくるの？</b><br><br>
+            第1話で、変位ベクトルは置き直してよい矢印だと確かめました。<br>
+            置き直してよいなら、<b>つなげる</b>こともできるはずです。<br>
+            足し算が必要になる場面を、自分で作ってみましょう。`,
+    startLabel: 'はじめる',
+    steps: ['step3', 'step5', 'reflection2'],
+    endText: '<b>第2話おわり。</b>矢印を継ぎ足すこと ＝ 足し算でした。',
+    endHint: '変位でも速度でも、継ぎ足し方は同じでした。',
+    next: { label: '第3話：相対速度へ進む →', href: 'relative.html' }
+  },
+
   relative: {
     label: '確認',
     intro: `今日は <b>相対速度</b> を学びます。<br>
@@ -60,7 +116,11 @@ const STEP_FILES = {
   step4: './steps/step4-velocity.js',
   step5: './steps/step5-compose.js',
   step6: './steps/step6-symbol.js',
-  reflection: './steps/reflection.js'
+  ext1: './steps/ext1-velocity.js',
+  ext2: './steps/ext2-deltav.js',
+  ext3: './steps/ext3-name.js',
+  reflection: './steps/reflection.js',
+  reflection2: './steps/reflection.js'   // 第2話の振り返り（問いは problems.reflection2）
 };
 
 /** 復習コースの冒頭。第1弾を通してやらない日に、いま何をするのかを先に伝える。 */
@@ -118,7 +178,9 @@ async function boot() {
   });
 
   state.course = activeCourse();
-  const order = state.course ? state.course.steps : STEP_ORDER;
+  if (!state.course) return renderHome();     // ?course= が無ければ話の選択画面
+  ui.exitHome();
+  const order = state.course.steps;
 
   if (state.course && state.course.intro) {
     state.steps.push({
@@ -139,13 +201,13 @@ async function boot() {
     // 復習コースでは、②.5b の「ここから話が変わります」だけ出さない。
     // 直前のステップを前提にした文で、コース冒頭の説明と重複するため。
     // ④⑤の「速度の話に入ります」「動くものが2つ」は復習コースでも必要なので残す。
-    if (state.course && id === 'step25b' && prob && prob.transition) prob = { ...prob, transition: null };
+    if (state.course.key === 'relative' && id === 'step25b' && prob && prob.transition) prob = { ...prob, transition: null };
     state.steps.push({ id, label: mod.default.label || id, module: mod.default, problems: prob });
   }
 
   setupSettings();
 
-  const saved = state.course ? null : storage.getCurrentStep();
+  const saved = storage.getCurrentStep(state.course.key);
   const savedIdx = state.steps.findIndex(s => s.id === saved);
   if (savedIdx > 0) {
     const go = await ui.modal({
@@ -157,6 +219,17 @@ async function boot() {
     else { storage.reset(); state.index = 0; }
   }
   await mountStep(state.index);
+}
+
+/* ---------- トップページ ---------- */
+function renderHome() {
+  ui.renderHome({
+    title: 'ベクトルで運動を表す',
+    lead: 'やりたい話をえらんでください。順番どおりに進むのがおすすめです。',
+    chapters: CHAPTERS.map(c => ({ ...c, done: storage.getSetting('done.' + c.key, false) === true })),
+    onPick: (c) => { location.href = c.href || ('index.html?course=' + c.key); }
+  });
+  setupSettings();
 }
 
 function phoneAware(prob, key) {
@@ -187,7 +260,7 @@ async function mountStep(i) {
   state.maxReached = Math.max(state.maxReached, i);
   const step = state.steps[i];
   state.currentProblems = step.problems;
-  if (!state.course) storage.setCurrentStep(step.id);   // 復習コースは通常の進捗を汚さない
+  storage.setCurrentStep(step.id, state.course.key);   // 話ごとに別々に覚える
 
   if (state.current && state.current.module.unmount) {
     try { state.current.module.unmount(); } catch (e) { console.warn(e); }
@@ -220,19 +293,23 @@ async function mountStep(i) {
 
 function finish() {
   const c = state.course;
+  if (c) storage.setSetting('done.' + c.key, true);
   ui.reset();
   ui.showCanvas(false);
   ui.setPrompt(c ? c.endText : '<b>おつかれさまでした。</b>');
-  ui.feedback(c ? c.endHint : '次は、基準を「動いている物体」に取り替えます。', 'info');
-  ui.actions([
-    { label: 'もう一度最初から', onClick: () => { storage.reset(); location.reload(); } },
-    {
-      id: 'next',
-      label: c ? c.next.label : '第2弾：相対速度へ進む →',
-      variant: 'primary',
-      onClick: () => { location.href = (c ? c.next.href : 'relative.html'); }
-    }
-  ]);
+  ui.feedback(c ? c.endHint : '', 'info');
+  const acts = [
+    { label: 'トップへもどる', onClick: () => { location.href = 'index.html'; } },
+    { label: 'この話をもう一度', onClick: () => {
+        if (c) storage.setCurrentStep(null, c.key);
+        location.reload();
+      } }
+  ];
+  if (c && c.next) {
+    acts.push({ id: 'next', label: c.next.label, variant: 'primary',
+                onClick: () => { location.href = c.next.href; } });
+  }
+  ui.actions(acts);
 }
 
 /* ---------- ステップに渡す ctx ---------- */
@@ -332,7 +409,7 @@ function feedbackFor(item, pattern) {
     wrongStart: '描き始めの点を確かめましょう。',
     fromOrigin: '基準点から描いていませんか？ いま知りたいのは、どこからどこへの移動でしょう。',
     wrongLength: '向きは合っています。長さ（マスの数）をもう一度数えてみましょう。',
-    wrongDirection: '向きをもう一度確かめましょう。東西と南北、それぞれ何マスですか？',
+    wrongDirection: '向きをもう一度確かめましょう。x に何マス、y に何マスですか？',
     sumOfLengths: '長さをそのまま足していませんか？ 矢印を継ぎ足したとき、終点はどこにありますか？'
   };
   return DEFAULTS[pattern] || 'もう一度考えてみましょう。';
@@ -355,7 +432,7 @@ function readoutItems(scene, item, prev = {}) {
       key = `${Math.round(v.x * 100)}/${Math.round(v.y * 100)}`;
       if (r.show === 'components') value = d.components;
       else if (r.show === 'magnitude') value = d.magnitude;
-      else value = `${d.words}　${d.components}`;
+      else value = d.words;
     }
     const changed = prev[r.id] !== undefined && prev[r.id] !== key;
     const unchanged = prev[r.id] !== undefined && prev[r.id] === key;
@@ -421,7 +498,7 @@ HANDLERS['draw-vector'] = (step, item, meta, done) => {
     if (!a) return;
     canvas.drawGuideLine(a.from, { x: a.to.x, y: a.from.y });
     canvas.drawGuideLine({ x: a.to.x, y: a.from.y }, a.to);
-    ui.feedback('補助線を出しました。東西に何マス、南北に何マス動くかを見てみましょう。', 'info');
+    ui.feedback('補助線を出しました。x に何マス、y に何マス動くかを見てみましょう。', 'info');
   };
 
   const showAnswer = () => {
@@ -433,8 +510,24 @@ HANDLERS['draw-vector'] = (step, item, meta, done) => {
     storage.recordHint(step.id, item.id);
   };
 
+  // 吸着先は「画面に見えている点」だけ。答えの端点を混ぜると当てられてしまう。
+  const magnets = [];
+  if (item.origin) magnets.push({ x: item.origin.x, y: item.origin.y });
+  for (const lm of (item.landmarks || [])) magnets.push({ x: lm.x, y: lm.y });
+  for (const p of Object.values((item.scene && item.scene.points) || {})) {
+    if (!p.hidden) magnets.push({ x: p.x, y: p.y });
+  }
+  // シーンの矢印の両端も、目で見えている点なので吸着先にする（継ぎ足しや先端どうしを結ぶ作図のため）
+  for (const v of ((item.scene && item.scene.vectors) || [])) {
+    if (v.hidden) continue;
+    const a = (item.scene.points || {})[v.from], b = (item.scene.points || {})[v.to];
+    if (a) magnets.push({ x: a.x, y: a.y });
+    if (b) magnets.push({ x: b.x, y: b.y });
+  }
+
   const tool = new vec.DrawTool(canvas, {
     profile: layout.profile,
+    magnets,
     styleName: item.style || 'displacement',
     // タップ方式のとき、いま何をすればよいかを示す
     onPhase: (phase) => {
@@ -446,7 +539,7 @@ HANDLERS['draw-vector'] = (step, item, meta, done) => {
       if (!v) { ui.setReadout([]); return; }
       const d = vec.describe(vec.V.sub(v.to, v.from), item.unit || '');
       ui.setReadout([
-        { id: 'draft', label: '成分', value: `${d.words}　${d.components}` },
+        { id: 'draft', label: '成分', value: d.words },
         { id: 'mag', label: '大きさ', value: d.magnitude }
       ]);
     },
@@ -730,6 +823,68 @@ HANDLERS['free-text'] = (step, item, meta, done) => {
   ]);
 };
 
+/* --- text-answer：ことばを入力して答える（発展の「漢字三文字」など） --- */
+HANDLERS['text-answer'] = (step, item, meta, done) => {
+  if (item.scene) buildScene(item.scene); else ui.showCanvas(!!item.showCanvas);
+  const accept = (item.accept || []).map(normalizeAnswer);
+  let text = '';
+  let attempts = 0;
+
+  const finishItem = (correct) => {
+    ui.stopHints();
+    ui.actions([{ label: '次へ', variant: 'primary', onClick: async () => {
+      if (item.reveal) {
+        await ui.modal({ title: item.reveal.title || '', body: item.reveal.body || '',
+                         actions: [{ label: 'わかった', variant: 'primary' }] });
+      }
+      done({ correct });
+    } }]);
+  };
+
+  const check = () => {
+    attempts++;
+    const ok = accept.includes(normalizeAnswer(text));
+    storage.recordAttempt(step.id, item.id, ok);
+    if (ok) {
+      ui.feedback(item.correctText || '正解です。', 'correct');
+      finishItem(true);
+      return;
+    }
+    const near = (item.nearMiss || []).find(n => normalizeAnswer(text) === normalizeAnswer(n.text));
+    ui.feedback(near ? near.feedback : (item.wrongText || 'ちがうようです。もう一度考えてみましょう。'), 'wrong');
+    if (attempts >= FLOW.maxAttempts) {
+      storage.recordPassedWithHelp(step.id, item.id);
+      ui.feedback((item.explanation || '') + `<br>答えは <b>${item.accept[0]}</b> です。`, 'info');
+      finishItem(false);
+    }
+  };
+
+  if (item.question) {
+    const q = document.createElement('p');
+    q.className = 'choice-question';
+    q.innerHTML = item.question;
+    ui.el.interact.style.display = '';
+    ui.el.interact.appendChild(q);
+  }
+  const ta = ui.renderTextarea({
+    rows: 1,
+    placeholder: item.placeholder || '',
+    value: ''
+  }, (v) => { text = v; });
+  ta.classList.add('short-answer');
+
+  ui.actions([{ id: 'check', label: '答え合わせ', variant: 'primary', onClick: check }]);
+  ui.startHints({ hints: item.hints || [], onCount: () => storage.recordHint(step.id, item.id) });
+};
+
+/** 全角・半角・空白のゆれを吸収してから比べる */
+function normalizeAnswer(t) {
+  return String(t == null ? '' : t)
+    .replace(/[\s\u3000]/g, '')
+    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+    .toLowerCase();
+}
+
 /* ---------- 設定（レイアウト手動切替・進捗リセット） ---------- */
 function setupSettings() {
   const btn = document.getElementById('settingsBtn');
@@ -755,7 +910,8 @@ function setupSettings() {
         { label: '作図：ドラッグ', value: 'draw-drag' },
         { label: '作図：自動', value: 'draw-auto' },
         { label: teacher ? '先生モードをOFF' : '先生モードをON', value: 'teacher' },
-        { label: '第2弾（相対速度）へ', value: 'vol2' },
+        { label: 'トップ（話の選択）へ', value: 'home' },
+        { label: '第3話（相対速度）へ', value: 'vol2' },
         { label: '相対速度の前提だけ復習する', value: 'course' },
         { label: '進捗をリセット', value: 'reset' },
         { label: '閉じる', value: 'close', variant: 'primary' }
@@ -764,21 +920,22 @@ function setupSettings() {
     if (v && v.startsWith('draw-')) {
       layout.setDrawMode(v.slice(5));
       ui.toast('作図の操作：' + (v === 'draw-tap' ? 'タップ' : v === 'draw-drag' ? 'ドラッグ' : '自動'));
-      await mountStep(state.index);
+      if (state.course) await mountStep(state.index);
       return;
     }
+    if (v === 'home') { location.href = 'index.html'; return; }
     if (v === 'vol2') { location.href = 'relative.html'; return; }
     if (v === 'course') { location.href = 'index.html?course=relative'; return; }
     if (v === 'teacher') {
       storage.setSetting('teacherMode', !teacher);
-      renderStepBar(state.steps[state.index].id);
+      if (state.course && state.steps[state.index]) renderStepBar(state.steps[state.index].id);
       ui.toast(!teacher ? '先生モード ON' : '先生モード OFF');
       return;
     }
     if (v === 'reset') { storage.reset(); location.reload(); return; }
     if (v === 'close') return;
     layout.setMode(v);
-    await mountStep(state.index);
+    if (state.course) await mountStep(state.index); else renderHome();
   });
 }
 

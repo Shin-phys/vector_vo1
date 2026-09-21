@@ -110,7 +110,7 @@ export default {
     };
     const settle = (ok, text) => {
       solved = true;
-      ctx.store.recordQuiz('symbol', ok, `${input.value} ${dir === 'east' ? '東' : '西'}`);
+      ctx.store.recordQuiz('symbol', ok, `${input.value} ${dir === 'east' ? '+x' : '−x'}`);
       ui.feedback(text, ok ? 'correct' : 'wrong');
       bridge.setLit('vAB');
       ui.setActionState('check', { disabled: true });

@@ -617,6 +617,20 @@ HANDLERS['choice'] = (step, item, meta, done) => {
   if (item.scene) buildScene(item.scene); else ui.showCanvas(!!item.showCanvas);
   if (item.readouts && state.scene) ui.setReadout(readoutItems(state.scene, item, {}));
   let attempts = 0;
+
+  // prediction: true … 予想を立てさせるだけ。正誤は出さず、どれを選んでも先へ進める。
+  // 確かめたあとで、同じことをもう一度（採点ありで）聞く。
+  if (item.prediction) {
+    const plist = ui.renderChoice(item, (i, opt, btn) => {
+      btn.classList.add('is-picked');
+      [...plist.children].forEach(c => c.disabled = true);
+      storage.recordAttempt(step.id, item.id, true);
+      ui.feedback(opt.note || item.afterPick || 'では、実際に確かめてみましょう。', 'info');
+      ui.actions([{ label: '確かめる', variant: 'primary', onClick: () => done({ correct: true }) }]);
+    });
+    ui.actions([]);
+    return;
+  }
   const list = ui.renderChoice(item, async (i, opt, btn) => {
     attempts++;
     const correct = i === item.correctIndex;

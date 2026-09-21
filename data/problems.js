@@ -72,9 +72,15 @@ export const problems = {
         unit: 'km',
         origin: { ...MAP.school },
         landmarks: [{ ...MAP.park }],
+        // 1問目で描いた「学校→駅」は残したまま。同じ基準点から2本そろうところを見せる。
         scene: {
-          points: { station: { ...MAP.station } },
-          vectors: []
+          points: {
+            school:  { ...MAP.school, hidden: true },   // 点は item.origin が描くので二重にしない
+            station: { ...MAP.station }
+          },
+          vectors: [
+            { id: 'rSta', from: 'school', to: 'station', style: 'position', locked: true, label: 'r⃗駅' }
+          ]
         },
         answer: { from: { x: 3, y: 3 }, to: { x: 1, y: 6 } },
         hints: ['基準点は さっきと同じ 学校です。−x は左向きです。'],
@@ -156,8 +162,8 @@ export const problems = {
           // ①で描いた「学校から」の矢印を、記号つきで残す。
           // 変位が「先端から先端へ」であることが、この2本があると見えやすい。
           vectors: [
-            { id: 'rSta',  from: 'school', to: 'station', style: 'position', locked: true, label: 'r駅' },
-            { id: 'rPark', from: 'school', to: 'park',    style: 'position', locked: true, label: 'r公園' }
+            { id: 'rSta',  from: 'school', to: 'station', style: 'position', locked: true, label: 'r⃗駅' },
+            { id: 'rPark', from: 'school', to: 'park',    style: 'position', locked: true, label: 'r⃗公園' }
           ]
         },
         answer: { from: { x: 6, y: 4 }, to: { x: 1, y: 6 }, origin: { x: 3, y: 3 } },
@@ -172,10 +178,10 @@ export const problems = {
           title: 'この矢印を「変位ベクトル」といいます',
           body: '<p>出発点から到着点へ向かう矢印を <b>変位ベクトル</b> といいます。</p>'
               + '<p>位置ベクトルの「先端から先端へ」引いた矢印だ、と見ることもできます。</p>'
-              + '<p class="sym-note">記号では、学校を基準とした駅の位置ベクトルを <b>r<sub>駅</sub></b>、'
-              + '公園の位置ベクトルを <b>r<sub>公園</sub></b> と書きます。'
-              + 'いま描いた「駅から公園へ」の変位 <b><span class="vec">駅公園</span></b> は '
-              + '<b>r<sub>公園</sub> − r<sub>駅</sub></b>。'
+              + '<p class="sym-note">記号では、学校を基準とした駅の位置ベクトルを <b><span class="vec">r</span><sub>駅</sub></b>、'
+              + '公園の位置ベクトルを <b><span class="vec">r</span><sub>公園</sub></b> と書きます。'
+              + 'いま描いた「駅から公園へ」の変位 <b>Δ<span class="vec">r</span></b> は '
+              + '<b><span class="vec">r</span><sub>公園</sub> − <span class="vec">r</span><sub>駅</sub></b>。'
               + '出発を <b>bef</b>、到着を <b>aft</b> と呼びます。'
               + '<b>矢印は bef → aft、式は aft − bef</b> です。</p>'
         }
@@ -212,7 +218,7 @@ export const problems = {
   },
 
   /* ===================== 速度はどの向き？（②の直後） =====================
-     平均の速度の「向き」だけを先に押さえる。v = Δr / Δt なので向きは Δr と同じ。
+     平均の速度の「向き」だけを先に押さえる。v = Δ<span class="vec">r</span> / Δt なので向きは Δ<span class="vec">r</span> と同じ。
      ここで向きを決めておくと、④では「スケールだけが変わる」話に集中できる。 */
   stepv: {
     title: '速度はどの向き？',
@@ -234,8 +240,8 @@ export const problems = {
             library: { ...MAP.library }
           },
           vectors: [
-            { id: 'rSta',  from: 'school',  to: 'station', style: 'position',     locked: true, label: 'r駅' },
-            { id: 'rPark', from: 'school',  to: 'park',    style: 'position',     locked: true, label: 'r公園' },
+            { id: 'rSta',  from: 'school',  to: 'station', style: 'position',     locked: true, label: 'r⃗駅' },
+            { id: 'rPark', from: 'school',  to: 'park',    style: 'position',     locked: true, label: 'r⃗公園' },
             { id: 'rLib',  from: 'school',  to: 'library', style: 'position',     locked: true, label: 'r図書館' },
             { id: 'disp',  from: 'station', to: 'park',    style: 'displacement',               label: '駅→公園' }
           ]
@@ -250,8 +256,8 @@ export const problems = {
         explanation: '速度の向きは、動いた向き——つまり変位の向きです。',
         hints: ['Sさんが「どの向きに動いたか」を表している矢印はどれでしょう。'],
         reveal: {
-          title: 'なぜ v と Δr は同じ向きなのか',
-          body: '<p><b>v ＝ Δr ÷ Δt</b></p>'
+          title: 'なぜ v と Δ<span class="vec">r</span> は同じ向きなのか',
+          body: '<p style="text-align:center;font-size:21px;margin:.2em 0 .6em"><span class="eq"><span class="vec">v</span> ＝ <span class="frac"><span class="num">Δ<span class="vec">r</span></span><span class="den">Δt</span></span></span></p>'
               + '<p>Δt（かかった時間）は必ず正の数です。矢印を<b>正の数で割っただけ</b>なので、'
               + '向きは変わりません。</p>'
               + '<p>変わるのは<b>長さ</b>だけ。つまり「1マスが何を表すか」だけが変わります。'
@@ -263,9 +269,9 @@ export const problems = {
       title: 'ここまでの整理',
       body: '<ol style="line-height:1.9">'
           + '<li><b>r（位置ベクトル）</b>は、<b>基準点</b>と<b>その地点</b>の、どちらの情報も持っている</li>'
-          + '<li>はじめの r の先端から、あとの r の先端へ結んだ矢印を <b>Δr（変位ベクトル）</b> という</li>'
-          + '<li>Δr は「位置が<b>どれだけ変化したか</b>」の情報を持つ</li>'
-          + '<li><b>v の向きは Δr と同じ</b></li>'
+          + '<li>はじめの r の先端から、あとの r の先端へ結んだ矢印を <b>Δ<span class="vec">r</span>（変位ベクトル）</b> という</li>'
+          + '<li>Δ<span class="vec">r</span> は「位置が<b>どれだけ変化したか</b>」の情報を持つ</li>'
+          + '<li><b><span class="vec">v</span> の向きは Δ<span class="vec">r</span> と同じ</b>（<span class="eq"><span class="vec">v</span> ＝ <span class="frac"><span class="num">Δ<span class="vec">r</span></span><span class="den">Δt</span></span></span>　だから）</li>'
           + '</ol>',
       button: '先へ進む'
     }
@@ -275,17 +281,19 @@ export const problems = {
   step25a: {
     title: '置き直してみる',
     minutes: 4,
-    passLine: { correct: 5, of: 5 },
+    passLine: { correct: 6, of: 6 },
     scaleLabel: '1マス = 1 km',
     intro: {
       title: '動かしてよい矢印と、動かしてはいけない矢印',
       body: '<p>ベクトルには2つの種類があります。</p>'
           + '<ul><li><b>自由ベクトル</b>　…　置き直して（平行移動して）よいもの</li>'
           + '<li><b>束縛ベクトル</b>　…　置き直すと意味が壊れるもの</li></ul>'
-          + '<p>画面の2本は、どちらがどちらでしょう。まず予想して、そのあと<b>実際に動かして</b>確かめます。</p>'
-          + '<p>動かす前に、それぞれが何を言っている矢印なのか、声に出して言ってみましょう。</p>'
-          + '<ul><li><b>位置ベクトル</b>（学校→駅）…「駅は、学校から x に +3・y に +1 のところにある」</li>'
-          + '<li><b>変位ベクトル</b>（駅→公園）…「x に −5・y に +2 動いた」</li></ul>'
+          + '<p>いま画面にある2本が、それぞれ持っている情報を確かめておきます。</p>'
+          + '<ul><li><b>位置ベクトル</b> r（学校→駅）…　<b>基準点</b>（学校）と<b>その地点</b>（駅）の、'
+          + '<b>どちらの情報も</b>持っている</li>'
+          + '<li><b>変位ベクトル</b> Δ<span class="vec">r</span>（駅→公園）…　<b>位置がどれだけ変化したか</b>の情報を持っている</li></ul>'
+          + '<p>どちらが自由ベクトルで、どちらが束縛ベクトルでしょう。'
+          + 'まず予想して、そのあと<b>実際に動かして</b>確かめます。</p>'
     },
     items: [
       {
@@ -293,6 +301,7 @@ export const problems = {
         // ここで当たるかどうかは重要ではなく、「動かして確かめる」動機をつくるのが目的。
         id: 's25a-q0',
         type: 'choice',
+        prediction: true,                 // 予想。正誤は出さない（動かしたあとで、もう一度聞く）
         prompt: '予想してみよう',
         question: '画面の2本は、どちらが<b>自由ベクトル</b>（動かしてよい）で、どちらが<b>束縛ベクトル</b>（動かせない）でしょう？',
         scene: {
@@ -307,14 +316,12 @@ export const problems = {
           ]
         },
         options: [
-          { key: 'ア', text: '位置ベクトルが自由、変位ベクトルが束縛', feedback: '逆かもしれません。次の画面で、実際に両方動かして確かめましょう。' },
+          { key: 'ア', text: '位置ベクトルが自由、変位ベクトルが束縛' },
           { key: 'イ', text: '位置ベクトルが束縛、変位ベクトルが自由' },
-          { key: 'ウ', text: 'どちらも自由（どちらも動かしてよい）', feedback: '本当にそうでしょうか。次の画面で確かめましょう。' },
-          { key: 'エ', text: 'どちらも束縛（どちらも動かせない）', feedback: '本当にそうでしょうか。次の画面で確かめましょう。' }
+          { key: 'ウ', text: 'どちらも自由（どちらも動かしてよい）' },
+          { key: 'エ', text: 'どちらも束縛（どちらも動かせない）' }
         ],
-        correctIndex: 1,
-        correctText: '予想できましたね。では、<b>本当にそうなるか</b>、実際に動かして確かめましょう。',
-        explanation: '位置ベクトルが束縛、変位ベクトルが自由です。次の画面で、その理由を自分の手で確かめます。'
+        afterPick: 'それが予想です。<b>合っているかどうかは、いまは言いません。</b>次の画面で、実際に両方動かして確かめましょう。'
       },
       {
         id: 's25a-t1',
@@ -350,9 +357,43 @@ export const problems = {
         reveal: {
           title: '長さも向きも変わっていないのに',
           body: '<p>数字を見ると、<b>どちらの矢印も成分は変わっていません</b>。長さも向きもそのままです。</p>'
-              + '<p>それでも位置ベクトルだけは元に戻ります。変わってしまったのは数字ではなく、'
-              + '<b>その矢印が意味していたこと</b>のほうです。</p>'
+              + '<p>それでも位置ベクトルだけは元に戻ります。</p>'
+              + '<p>位置ベクトル r は、<b>基準点</b>と<b>その先の地点</b>の、どちらの情報も持っていました。'
+              + 'これを移動すると、<b>基準点も、その先の地点も、どちらも変わってしまいます</b>。'
+              + 'つまり <b>別ものどうしをつないでいる</b>ことになります。</p>'
+              + '<p>変位ベクトル Δ<span class="vec">r</span> が持っているのは「位置がどれだけ変化したか」だけです。'
+              + '移動しても、<b>矢印を描く位置が変わるだけで、中身は同じ</b>です。</p>'
         }
+      },
+      {
+        // 予想 →（動かして確かめる）→ ここでもう一度。ここは採点する。
+        id: 's25a-q0b',
+        type: 'choice',
+        prompt: '動かしてみた結果から答えよう',
+        question: 'では、あらためて。どちらが<b>自由ベクトル</b>で、どちらが<b>束縛ベクトル</b>でしたか？',
+        scene: {
+          points: {
+            school:  { ...MAP.school,  role: 'origin' },
+            station: { ...MAP.station },
+            park:    { ...MAP.park }
+          },
+          vectors: [
+            { id: 'pos',  from: 'school',  to: 'station', style: 'position',     locked: true, label: '位置ベクトル' },
+            { id: 'disp', from: 'station', to: 'park',    style: 'displacement',               label: '変位ベクトル' }
+          ]
+        },
+        options: [
+          { key: 'ア', text: '位置ベクトルが自由、変位ベクトルが束縛',
+            feedback: '手を離したとき、元に戻ってしまったのはどちらでしたか？' },
+          { key: 'イ', text: '位置ベクトルが束縛、変位ベクトルが自由' },
+          { key: 'ウ', text: 'どちらも自由（どちらも動かしてよい）',
+            feedback: '片方は、手を離すと元に戻ってしまいました。' },
+          { key: 'エ', text: 'どちらも束縛（どちらも動かせない）',
+            feedback: '片方は、動かした場所にそのまま置いておけました。' }
+        ],
+        correctIndex: 1,
+        correctText: 'そのとおり。位置ベクトルが<b>束縛</b>、変位ベクトルが<b>自由</b>でした。',
+        explanation: '手を離しても元に戻らなかった変位ベクトルが自由、戻ってしまった位置ベクトルが束縛です。'
       },
       {
         id: 's25a-q1',
@@ -439,7 +480,7 @@ export const problems = {
         hints: ['まず片方の矢印の成分を読み取り、もう片方を同じ成分にしてみましょう。'],
         reveal: {
           title: '🔒 のルール',
-          body: '<ul><li><b>位置ベクトル</b>＝どこから出ているかに意味がある。置き直すと言えなくなる（🔒 がつく）</li><li><b>変位ベクトル</b>＝向きと大きさだけを言っている。どこに置いてもよい</li></ul><p>これから先も、🔒 のついた矢印は動かしても元に戻ります。</p>'
+          body: '<ul><li><b>位置ベクトル</b> r ＝ 基準点とその先の地点、どちらの情報も持つ。置き直すと別ものになる（🔒 がつく）</li><li><b>変位ベクトル</b>＝向きと大きさだけを言っている。どこに置いてもよい</li></ul><p>これから先も、🔒 のついた矢印は動かしても元に戻ります。</p>'
         }
       }
     ]
@@ -452,8 +493,8 @@ export const problems = {
     passLine: { correct: 2, of: 2 },
     scaleLabel: '1マス = 1 km',
     transition: {
-      title: 'なぜ Δr は、動かしてよかったのか',
-      body: '<p>Δr は置き直してよい矢印でした。それは、<b>Δr が持っている情報が「置き場所」によらない</b>、'
+      title: 'なぜ Δ<span class="vec">r</span> は、動かしてよかったのか',
+      body: '<p>Δ<span class="vec">r</span> は置き直してよい矢印でした。それは、<b>Δ<span class="vec">r</span> が持っている情報が「置き場所」によらない</b>、'
           + 'ということです。</p>'
           + '<p>本当にそう言い切れるでしょうか。もっと乱暴なことをして確かめます。'
           + '——<b>測る基準そのものを動かしてみましょう。</b></p>',
@@ -496,7 +537,11 @@ export const problems = {
         hints: ['数値表示を見ながら O を動かしましょう。赤く光った数と、「変化なし」の数があります。'],
         reveal: {
           title: '2本が、同じだけずれている',
-          body: '<p>O を動かすと、O→駅 と O→公園 の<b>2本が同じだけずれます</b>。</p><p>変位は、その2本の<b>先端どうしを結んだ矢印</b>です。2本が同じだけずれるのだから、結んだ矢印は動きません。</p>'
+          body: '<p>基準点が変われば、位置ベクトル r は<b>向きも長さも変わります</b>。'
+              + 'もとの r が持っていた情報は、<b>何ひとつ残りません</b>。</p>'
+              + '<p>それでも、O→駅 と O→公園 の<b>2本は同じだけずれます</b>。'
+              + '変位はその2本の<b>先端どうしを結んだ矢印</b>なので、結んだ矢印は動きません。</p>'
+              + '<p>Δ<span class="vec">r</span> が持っているのは「位置の変化」だけ。基準点とは関わりがないのです。</p>'
         }
       },
       {
@@ -530,12 +575,12 @@ export const problems = {
         explanation: '変位は2本の位置ベクトルの差です。基準を動かすと2本とも同じだけずれるので、差は変わりません。',
         reveal: {
           title: 'ポイント：変化を表すベクトルは、移動できる',
-          body: '<p>Δr が持っているのは「<b>位置がどれだけ変化したか</b>」だけです。'
+          body: '<p>Δ<span class="vec">r</span> が持っているのは「<b>位置がどれだけ変化したか</b>」だけです。'
               + '基準をどこに置こうと、その情報は変わりませんでした。</p>'
-              + '<p>だから <b>Δr は、どこに置き直してもよい</b>のです。'
+              + '<p>だから <b>Δ<span class="vec">r</span> は、どこに置き直してもよい</b>のです。'
               + '②.5a で動かせたのは、これが理由でした。</p>'
               + '<p><b>変化を表すベクトルは、移動できる。</b>'
-              + 'これは Δr だけの話ではありません。<b>速度ベクトルも、加速度ベクトルも移動できます。</b>'
+              + 'これは Δ<span class="vec">r</span> だけの話ではありません。<b>速度ベクトルも、加速度ベクトルも移動できます。</b>'
               + '——どれも「変化」を表す量だからです。</p>'
               + '<p class="sym-note">基準を取り替えるという考え方は、<b>第3話でもう一度出てきます</b>。</p>'
         }
@@ -840,49 +885,52 @@ export const problems = {
     ],
     rule: '出発を <b>bef</b>、到着を <b>aft</b> と呼びます。'
         + '<b>矢印は bef → aft、式は aft − bef。</b>'
-        + 'つまり <b>Δr ＝ r<sub>aft</sub> − r<sub>bef</sub></b>。添字は「基準 → 対象」の順に書きます。',
+        + 'つまり <b>Δ<span class="vec">r</span> ＝ <span class="vec">r</span><sub>aft</sub> − <span class="vec">r</span><sub>bef</sub></b>。添字は「基準 → 対象」の順に書きます。',
     // ①直感 → ②bef → ③aft → ④式、の順で進む（js/steps/step6-symbol.js が順に出す）
     quizValue: {
-      question: '① まず直感で。Sさんの<b>駅から公園への変位 Δr</b> を、向きと大きさで答えよう。',
+      question: '① まず直感で。Sさんの<b>駅から公園への変位 Δ<span class="vec">r</span></b> を、向きと大きさで答えよう。',
+      logLabel: '① Δ<span class="vec">r</span>（駅→公園）　＝',
       answer: { x: -5, y: 2 },
       retryHint: '図のマスを数えるだけで出ます。x はどちらへいくつ、y はどちらへいくつ？',
       explain: '図のとおり <b>x に −5、y に +2</b>。これが答えです。'
              + 'では、この答えを<b>式でも出せるか</b>を確かめていきましょう。'
     },
     coordBef: {
-      question: '② 出発（<b>bef</b>）は駅。基準点 O から見た <b>r<sub>駅</sub></b> の成分は？',
+      question: '② 出発（<b>bef</b>）は駅。基準点 O から見た <b><span class="vec">r</span><sub>bef</sub></b>（＝<span class="vec">r</span><sub>駅</sub>）の成分は？',
+      logLabel: '② <span class="vec">r</span><sub>bef</sub>（O→駅）　＝',
       answer: { x: 3, y: 1 },
       lit: 'rStation',
       retryHint: 'O から駅へ、x にいくつ、y にいくつでしょう。',
-      explain: '<b>r<sub>駅</sub> ＝ (+3, +1)</b>。O から駅への位置ベクトルです。'
+      explain: '<b><span class="vec">r</span><sub>駅</sub> ＝ (+3, +1)</b>。O から駅への位置ベクトルです。'
     },
     coordAft: {
-      question: '③ 到着（<b>aft</b>）は公園。基準点 O から見た <b>r<sub>公園</sub></b> の成分は？',
+      question: '③ 到着（<b>aft</b>）は公園。基準点 O から見た <b><span class="vec">r</span><sub>aft</sub></b>（＝<span class="vec">r</span><sub>公園</sub>）の成分は？',
+      logLabel: '③ <span class="vec">r</span><sub>aft</sub>（O→公園）　＝',
       answer: { x: -2, y: 3 },
       lit: 'rPark',
       retryHint: 'O から公園へ。x は左向きなので −、y は上向きなので ＋ です。',
-      explain: '<b>r<sub>公園</sub> ＝ (−2, +3)</b>。O から公園への位置ベクトルです。'
+      explain: '<b><span class="vec">r</span><sub>公園</sub> ＝ (−2, +3)</b>。O から公園への位置ベクトルです。'
     },
     quizOrder: {
-      question: '④ ①〜③で出した数を見くらべよう。Δr（駅 → 公園）を<b>式</b>で書くと？',
+      question: '④ 下の「ここまでに出した答え」を見くらべよう。Δ<span class="vec">r</span>（駅 → 公園）を<b>式</b>で書くと？',
       options: [
-        { key: 'ア', text: 'r<sub>駅</sub> − r<sub>公園</sub>　（bef − aft）',
+        { key: 'ア', text: '<span class="vec">r</span><sub>駅</sub> − <span class="vec">r</span><sub>公園</sub>　（bef − aft）',
           feedback: '計算すると (+3, +1) − (−2, +3) ＝ (+5, −2)。①で出した答えと<b>符号が逆</b>になります。' },
-        { key: 'イ', text: 'r<sub>公園</sub> − r<sub>駅</sub>　（aft − bef）' },
-        { key: 'ウ', text: 'r<sub>駅</sub> ＋ r<sub>公園</sub>',
+        { key: 'イ', text: '<span class="vec">r</span><sub>公園</sub> − <span class="vec">r</span><sub>駅</sub>　（aft − bef）' },
+        { key: 'ウ', text: '<span class="vec">r</span><sub>駅</sub> ＋ <span class="vec">r</span><sub>公園</sub>',
           feedback: '足すと、駅でも公園でもない場所を指してしまいます。' }
       ],
       correct: 1,
       explain: '③ − ② ＝ (−2, +3) − (+3, +1) ＝ <b>(−5, +2)</b>。'
              + '①で直感的に出した答えと、ぴったり一致しました。<br>'
-             + '<b>Δr ＝ r<sub>aft</sub> − r<sub>bef</sub>。矢印は bef → aft、式は aft − bef</b> です。'
+             + '<b>Δ<span class="vec">r</span> ＝ <span class="vec">r</span><sub>aft</sub> − <span class="vec">r</span><sub>bef</sub>。矢印は bef → aft、式は aft − bef</b> です。'
     }
   },
 
 
   /* ===================== 発展：斜方投射（第1話と第2話のあいだ） =====================
      位置ベクトルは描画済み。基準点 O はどの画面でもドラッグできる（第1話の確認）。
-     P0〜P3 は 1 秒ごとの位置。v01=(2,4) v12=(2,2) v23=(2,0) なので Δv はどちらも (0,−2)。 */
+     P0〜P3 は 1 秒ごとの位置。v01=(2,4) v12=(2,2) v23=(2,0) なので Δ<span class="vec">v</span> はどちらも (0,−2)。 */
 
   ext1: {
     title: '位置ベクトルから速度ベクトルをつくる',
@@ -904,8 +952,8 @@ export const problems = {
             P3: { x: 7, y: 7, label: 'P₃' }
           },
           vectors: [
-            { id: 'r0',  from: 'O',  to: 'P0', style: 'position',     locked: true, label: 'r₀' },
-            { id: 'r1',  from: 'O',  to: 'P1', style: 'position',     locked: true, label: 'r₁' },
+            { id: 'r0',  from: 'O',  to: 'P0', style: 'position',     locked: true, label: 'r⃗₀' },
+            { id: 'r1',  from: 'O',  to: 'P1', style: 'position',     locked: true, label: 'r⃗₁' },
             { id: 'd01', from: 'P0', to: 'P1', style: 'displacement', locked: false, label: 'P₀→P₁' }
           ]
         },
@@ -928,7 +976,7 @@ export const problems = {
       {
         id: 'ext1-v01',
         type: 'draw-vector',
-        prompt: '<b>P₀ から P₁ への変位</b>を描こう。Δt = 1 秒なので、この矢印がそのまま<b>速度ベクトル v₀₁</b>になります。',
+        prompt: '<b>P₀ から P₁ への変位</b>を描こう。Δt = 1 秒なので、この矢印がそのまま<b>速度ベクトル <span class="vec">v</span>₀₁</b>になります。',
         style: 'velocity',
         unit: 'm/s',
         scene: {
@@ -940,10 +988,10 @@ export const problems = {
             P3: { x: 7, y: 7, label: 'P₃' }
           },
           vectors: [
-            { id: 'r0', from: 'O', to: 'P0', style: 'position', locked: true, label: 'r₀' },
-            { id: 'r1', from: 'O', to: 'P1', style: 'position', locked: true, label: 'r₁' },
-            { id: 'r2', from: 'O', to: 'P2', style: 'position', locked: true, label: 'r₂' },
-            { id: 'r3', from: 'O', to: 'P3', style: 'position', locked: true, label: 'r₃' }
+            { id: 'r0', from: 'O', to: 'P0', style: 'position', locked: true, label: 'r⃗₀' },
+            { id: 'r1', from: 'O', to: 'P1', style: 'position', locked: true, label: 'r⃗₁' },
+            { id: 'r2', from: 'O', to: 'P2', style: 'position', locked: true, label: 'r⃗₂' },
+            { id: 'r3', from: 'O', to: 'P3', style: 'position', locked: true, label: 'r⃗₃' }
           ]
         },
         answer: { from: { x: 1, y: 1 }, to: { x: 3, y: 5 } },
@@ -952,16 +1000,16 @@ export const problems = {
           { when: 'reversed', text: 'P₀ から P₁ へ、時間の進む順に描きます。' },
           { when: 'fromOrigin', text: 'O からではありません。P₀ から描き始めます。' }
         ],
-        explanation: 'P₀ から P₁ へ、x +2・y +4。Δt = 1 秒なので v₀₁ = (2, 4) m/s です。',
+        explanation: 'P₀ から P₁ へ、x +2・y +4。Δt = 1 秒なので <span class="vec">v</span>₀₁ = (2, 4) m/s です。',
         reveal: {
           title: 'Δt = 1 秒のとき、変位と速度は同じ矢印',
-          body: '<p>v = Δr / Δt でした。1 秒あたりで見ているので、<b>変位の矢印がそのまま速度の矢印</b>になります。</p><p>ただし目盛の意味は m から m/s に変わっています。</p>'
+          body: '<p><span class="eq"><span class="vec">v</span> ＝ <span class="frac"><span class="num">Δ<span class="vec">r</span></span><span class="den">Δt</span></span></span>　でした。1 秒あたりで見ているので、<b>変位の矢印がそのまま速度の矢印</b>になります。</p><p>ただし目盛の意味は m から m/s に変わっています。</p>'
         }
       },
       {
         id: 'ext1-v12',
         type: 'draw-vector',
-        prompt: '同じように、<b>v₁₂</b>（P₁ から P₂ へ）を描こう。',
+        prompt: '同じように、<b><span class="vec">v</span>₁₂</b>（P₁ から P₂ へ）を描こう。',
         style: 'velocity',
         unit: 'm/s',
         scene: {
@@ -973,11 +1021,11 @@ export const problems = {
             P3: { x: 7, y: 7, label: 'P₃' }
           },
           vectors: [
-            { id: 'r0',  from: 'O',  to: 'P0', style: 'position', locked: true, label: 'r₀' },
-            { id: 'r1',  from: 'O',  to: 'P1', style: 'position', locked: true, label: 'r₁' },
-            { id: 'r2',  from: 'O',  to: 'P2', style: 'position', locked: true, label: 'r₂' },
-            { id: 'r3',  from: 'O',  to: 'P3', style: 'position', locked: true, label: 'r₃' },
-            { id: 'v01', from: 'P0', to: 'P1', style: 'velocity', locked: false, label: 'v₀₁' }
+            { id: 'r0',  from: 'O',  to: 'P0', style: 'position', locked: true, label: 'r⃗₀' },
+            { id: 'r1',  from: 'O',  to: 'P1', style: 'position', locked: true, label: 'r⃗₁' },
+            { id: 'r2',  from: 'O',  to: 'P2', style: 'position', locked: true, label: 'r⃗₂' },
+            { id: 'r3',  from: 'O',  to: 'P3', style: 'position', locked: true, label: 'r⃗₃' },
+            { id: 'v01', from: 'P0', to: 'P1', style: 'velocity', locked: false, label: 'v⃗₀₁' }
           ]
         },
         answer: { from: { x: 3, y: 5 }, to: { x: 5, y: 7 } },
@@ -986,12 +1034,12 @@ export const problems = {
           { when: 'wrongStart', text: '描き始めは P₁ です。' },
           { when: 'wrongLength', text: '向きは合っています。y に何マスでしょう。' }
         ],
-        explanation: 'v₁₂ = (2, 2) m/s。x 成分は変わらず、y 成分が 4 から 2 に減りました。'
+        explanation: '<span class="vec">v</span>₁₂ = (2, 2) m/s。x 成分は変わらず、y 成分が 4 から 2 に減りました。'
       },
       {
         id: 'ext1-v23',
         type: 'draw-vector',
-        prompt: 'もう1本、<b>v₂₃</b>（P₂ から P₃ へ）を描こう。',
+        prompt: 'もう1本、<b><span class="vec">v</span>₂₃</b>（P₂ から P₃ へ）を描こう。',
         style: 'velocity',
         unit: 'm/s',
         scene: {
@@ -1003,12 +1051,12 @@ export const problems = {
             P3: { x: 7, y: 7, label: 'P₃' }
           },
           vectors: [
-            { id: 'r0',  from: 'O',  to: 'P0', style: 'position', locked: true, label: 'r₀' },
-            { id: 'r1',  from: 'O',  to: 'P1', style: 'position', locked: true, label: 'r₁' },
-            { id: 'r2',  from: 'O',  to: 'P2', style: 'position', locked: true, label: 'r₂' },
-            { id: 'r3',  from: 'O',  to: 'P3', style: 'position', locked: true, label: 'r₃' },
-            { id: 'v01', from: 'P0', to: 'P1', style: 'velocity', locked: false, label: 'v₀₁' },
-            { id: 'v12', from: 'P1', to: 'P2', style: 'velocity', locked: false, label: 'v₁₂' }
+            { id: 'r0',  from: 'O',  to: 'P0', style: 'position', locked: true, label: 'r⃗₀' },
+            { id: 'r1',  from: 'O',  to: 'P1', style: 'position', locked: true, label: 'r⃗₁' },
+            { id: 'r2',  from: 'O',  to: 'P2', style: 'position', locked: true, label: 'r⃗₂' },
+            { id: 'r3',  from: 'O',  to: 'P3', style: 'position', locked: true, label: 'r⃗₃' },
+            { id: 'v01', from: 'P0', to: 'P1', style: 'velocity', locked: false, label: 'v⃗₀₁' },
+            { id: 'v12', from: 'P1', to: 'P2', style: 'velocity', locked: false, label: 'v⃗₁₂' }
           ]
         },
         answer: { from: { x: 5, y: 7 }, to: { x: 7, y: 7 } },
@@ -1016,7 +1064,7 @@ export const problems = {
         feedback: [
           { when: 'wrongLength', text: '高さが変わっていません。y 成分は 0 です。' }
         ],
-        explanation: 'v₂₃ = (2, 0) m/s。y 成分が 0 になりました。',
+        explanation: '<span class="vec">v</span>₂₃ = (2, 0) m/s。y 成分が 0 になりました。',
         reveal: {
           title: '3本ならびました',
           body: '<p>x 成分はずっと 2 のまま。y 成分だけが <b>4 → 2 → 0</b> と減っています。</p><p>この「減り方」を矢印で取り出してみましょう。</p>'
@@ -1050,15 +1098,15 @@ export const problems = {
             P3: { x: 7, y: 7, label: 'P₃' }
           },
           vectors: [
-            { id: 'v01', from: 'P0', to: 'P1', style: 'velocity', locked: false, draggable: true, label: 'v₀₁' },
-            { id: 'v12', from: 'P1', to: 'P2', style: 'velocity', locked: false, draggable: true, label: 'v₁₂' },
-            { id: 'v23', from: 'P2', to: 'P3', style: 'velocity', locked: false, draggable: true, label: 'v₂₃' }
+            { id: 'v01', from: 'P0', to: 'P1', style: 'velocity', locked: false, draggable: true, label: 'v⃗₀₁' },
+            { id: 'v12', from: 'P1', to: 'P2', style: 'velocity', locked: false, draggable: true, label: 'v⃗₁₂' },
+            { id: 'v23', from: 'P2', to: 'P3', style: 'velocity', locked: false, draggable: true, label: 'v⃗₂₃' }
           ]
         },
         readouts: [
-          { id: 'v01', label: 'v₀₁', vector: 'v01', watch: true, unchangedBadge: true },
-          { id: 'v12', label: 'v₁₂', vector: 'v12', watch: true, unchangedBadge: true },
-          { id: 'v23', label: 'v₂₃', vector: 'v23', watch: true, unchangedBadge: true }
+          { id: 'v01', label: 'v⃗₀₁', vector: 'v01', watch: true, unchangedBadge: true },
+          { id: 'v12', label: 'v⃗₁₂', vector: 'v12', watch: true, unchangedBadge: true },
+          { id: 'v23', label: 'v⃗₂₃', vector: 'v23', watch: true, unchangedBadge: true }
         ],
         conditions: [{ kind: 'vectorsShareStart', of: ['v01', 'v12', 'v23'], at: 'A' }],
         hintText: '矢印の線をつかんで運びます。運んでも成分（右の数値）は変わりません。',
@@ -1072,7 +1120,7 @@ export const problems = {
       {
         id: 'ext2-dv1',
         type: 'draw-vector',
-        prompt: '<b>v₀₁ の先端から v₁₂ の先端へ</b>、矢印を描こう。これが <b>Δv₁</b>（速度の変化）です。',
+        prompt: '<b><span class="vec">v</span>₀₁ の先端から <span class="vec">v</span>₁₂ の先端へ</b>、矢印を描こう。これが <b>Δ<span class="vec">v</span>₁</b>（速度の変化）です。',
         style: 'displacement',
         unit: 'm/s',
         scene: {
@@ -1083,23 +1131,23 @@ export const problems = {
             T3: { x: 4, y: 1, label: '' }
           },
           vectors: [
-            { id: 'v01', from: 'A', to: 'T1', style: 'velocity', locked: false, label: 'v₀₁', appearDelay: 0.1 },
-            { id: 'v12', from: 'A', to: 'T2', style: 'velocity', locked: false, label: 'v₁₂', appearDelay: 0.5 },
-            { id: 'v23', from: 'A', to: 'T3', style: 'velocity', locked: false, label: 'v₂₃', appearDelay: 0.9 }
+            { id: 'v01', from: 'A', to: 'T1', style: 'velocity', locked: false, label: 'v⃗₀₁', appearDelay: 0.1 },
+            { id: 'v12', from: 'A', to: 'T2', style: 'velocity', locked: false, label: 'v⃗₁₂', appearDelay: 0.5 },
+            { id: 'v23', from: 'A', to: 'T3', style: 'velocity', locked: false, label: 'v⃗₂₃', appearDelay: 0.9 }
           ]
         },
         answer: { from: { x: 4, y: 5 }, to: { x: 4, y: 3 }, origin: { x: 2, y: 1 } },
         hints: ['変位のときと同じです。先端から先端へ。'],
         feedback: [
-          { when: 'reversed', text: '時間の進む順です。v₀₁ の先端から v₁₂ の先端へ。' },
-          { when: 'fromOrigin', text: 'A からではありません。v₀₁ の<b>先端</b>から描き始めます。' }
+          { when: 'reversed', text: '時間の進む順です。<span class="vec">v</span>₀₁ の先端から <span class="vec">v</span>₁₂ の先端へ。' },
+          { when: 'fromOrigin', text: 'A からではありません。<span class="vec">v</span>₀₁ の<b>先端</b>から描き始めます。' }
         ],
-        explanation: 'Δv₁ = v<sub>aft</sub> − v<sub>bef</sub> = v₁₂ − v₀₁ = (2, 2) − (2, 4) = <b>(0, −2)</b>。真下を向いた矢印になります。'
+        explanation: 'Δ<span class="vec">v</span>₁ = <span class="vec">v</span><sub>aft</sub> − <span class="vec">v</span><sub>bef</sub> = <span class="vec">v</span>₁₂ − <span class="vec">v</span>₀₁ = (2, 2) − (2, 4) = <b>(0, −2)</b>。真下を向いた矢印になります。'
       },
       {
         id: 'ext2-dv2',
         type: 'draw-vector',
-        prompt: 'もう1本、<b>v₁₂ の先端から v₂₃ の先端へ</b>。これが <b>Δv₂</b> です。',
+        prompt: 'もう1本、<b><span class="vec">v</span>₁₂ の先端から <span class="vec">v</span>₂₃ の先端へ</b>。これが <b>Δ<span class="vec">v</span>₂</b> です。',
         style: 'displacement',
         unit: 'm/s',
         scene: {
@@ -1110,24 +1158,24 @@ export const problems = {
             T3: { x: 4, y: 1, label: '' }
           },
           vectors: [
-            { id: 'v01', from: 'A',  to: 'T1', style: 'velocity',     locked: false, label: 'v₀₁' },
-            { id: 'v12', from: 'A',  to: 'T2', style: 'velocity',     locked: false, label: 'v₁₂' },
-            { id: 'v23', from: 'A',  to: 'T3', style: 'velocity',     locked: false, label: 'v₂₃' },
-            { id: 'dv1', from: 'T1', to: 'T2', style: 'displacement', locked: false, label: 'Δv₁' }
+            { id: 'v01', from: 'A',  to: 'T1', style: 'velocity',     locked: false, label: 'v⃗₀₁' },
+            { id: 'v12', from: 'A',  to: 'T2', style: 'velocity',     locked: false, label: 'v⃗₁₂' },
+            { id: 'v23', from: 'A',  to: 'T3', style: 'velocity',     locked: false, label: 'v⃗₂₃' },
+            { id: 'dv1', from: 'T1', to: 'T2', style: 'displacement', locked: false, label: 'Δv⃗₁' }
           ]
         },
         answer: { from: { x: 4, y: 3 }, to: { x: 4, y: 1 }, origin: { x: 2, y: 1 } },
         hints: ['1本目とまったく同じ描き方です。'],
         feedback: [
-          { when: 'reversed', text: 'v₁₂ の先端から v₂₃ の先端へ、の順です。' }
+          { when: 'reversed', text: '<span class="vec">v</span>₁₂ の先端から <span class="vec">v</span>₂₃ の先端へ、の順です。' }
         ],
-        explanation: 'Δv₂ = v<sub>aft</sub> − v<sub>bef</sub> = v₂₃ − v₁₂ = (2, 0) − (2, 2) = <b>(0, −2)</b>。1本目とまったく同じ矢印です。'
+        explanation: 'Δ<span class="vec">v</span>₂ = <span class="vec">v</span><sub>aft</sub> − <span class="vec">v</span><sub>bef</sub> = <span class="vec">v</span>₂₃ − <span class="vec">v</span>₁₂ = (2, 0) − (2, 2) = <b>(0, −2)</b>。1本目とまったく同じ矢印です。'
       }
     ]
   },
 
   ext3: {
-    title: 'Δv が表しているもの',
+    title: 'Δ<span class="vec">v</span> が表しているもの',
     minutes: 2,
     passLine: { correct: 1, of: 2 },
     scaleLabel: '1マス = 1 m/s',
@@ -1135,8 +1183,8 @@ export const problems = {
       {
         id: 'ext3-q1',
         type: 'choice',
-        prompt: '2本の Δv を見くらべよう。',
-        question: '2本の Δv に共通していることは何ですか？',
+        prompt: '2本の Δ<span class="vec">v</span> を見くらべよう。',
+        question: '2本の Δ<span class="vec">v</span> に共通していることは何ですか？',
         scene: {
           points: {
             A:  { x: 2, y: 1, label: 'A', role: 'origin' },
@@ -1145,11 +1193,11 @@ export const problems = {
             T3: { x: 4, y: 1, label: '' }
           },
           vectors: [
-            { id: 'v01', from: 'A',  to: 'T1', style: 'velocity',     locked: false, label: 'v₀₁' },
-            { id: 'v12', from: 'A',  to: 'T2', style: 'velocity',     locked: false, label: 'v₁₂' },
-            { id: 'v23', from: 'A',  to: 'T3', style: 'velocity',     locked: false, label: 'v₂₃' },
-            { id: 'dv1', from: 'T1', to: 'T2', style: 'displacement', locked: false, label: 'Δv₁' },
-            { id: 'dv2', from: 'T2', to: 'T3', style: 'displacement', locked: false, label: 'Δv₂' }
+            { id: 'v01', from: 'A',  to: 'T1', style: 'velocity',     locked: false, label: 'v⃗₀₁' },
+            { id: 'v12', from: 'A',  to: 'T2', style: 'velocity',     locked: false, label: 'v⃗₁₂' },
+            { id: 'v23', from: 'A',  to: 'T3', style: 'velocity',     locked: false, label: 'v⃗₂₃' },
+            { id: 'dv1', from: 'T1', to: 'T2', style: 'displacement', locked: false, label: 'Δv⃗₁' },
+            { id: 'dv2', from: 'T2', to: 'T3', style: 'displacement', locked: false, label: 'Δv⃗₂' }
           ]
         },
         options: [
@@ -1165,7 +1213,7 @@ export const problems = {
       {
         id: 'ext3-name',
         type: 'text-answer',
-        prompt: '<b>Δv ÷ Δt</b>（1秒あたりの速度の変化）を表す量には、名前がついています。',
+        prompt: '<b>Δ<span class="vec">v</span> ÷ Δt</b>（1秒あたりの速度の変化）を表す量には、名前がついています。',
         question: '漢字三文字で入力しよう。',
         placeholder: '漢字三文字',
         scene: {
@@ -1176,11 +1224,11 @@ export const problems = {
             T3: { x: 4, y: 1, label: '' }
           },
           vectors: [
-            { id: 'v01', from: 'A',  to: 'T1', style: 'velocity',     locked: false, label: 'v₀₁' },
-            { id: 'v12', from: 'A',  to: 'T2', style: 'velocity',     locked: false, label: 'v₁₂' },
-            { id: 'v23', from: 'A',  to: 'T3', style: 'velocity',     locked: false, label: 'v₂₃' },
-            { id: 'dv1', from: 'T1', to: 'T2', style: 'displacement', locked: false, label: 'Δv₁' },
-            { id: 'dv2', from: 'T2', to: 'T3', style: 'displacement', locked: false, label: 'Δv₂' }
+            { id: 'v01', from: 'A',  to: 'T1', style: 'velocity',     locked: false, label: 'v⃗₀₁' },
+            { id: 'v12', from: 'A',  to: 'T2', style: 'velocity',     locked: false, label: 'v⃗₁₂' },
+            { id: 'v23', from: 'A',  to: 'T3', style: 'velocity',     locked: false, label: 'v⃗₂₃' },
+            { id: 'dv1', from: 'T1', to: 'T2', style: 'displacement', locked: false, label: 'Δv⃗₁' },
+            { id: 'dv2', from: 'T2', to: 'T3', style: 'displacement', locked: false, label: 'Δv⃗₂' }
           ]
         },
         accept: ['加速度'],
@@ -1190,12 +1238,13 @@ export const problems = {
           { text: '落下', feedback: '現象の名前ではなく、量の名前です。' }
         ],
         wrongText: '漢字三文字です。「1秒あたりに速度がどれだけ変わるか」を表す量の名前を思い出してみましょう。',
-        correctText: '正解。Δv ÷ Δt が <b>加速度</b>です。',
-        explanation: 'v = Δr / Δt と同じ形です。位置の変化率が速度、速度の変化率が加速度。',
-        hints: ['v = Δr / Δt でした。では a = Δv / Δt の a は？'],
+        correctText: '正解。Δ<span class="vec">v</span> ÷ Δt が <b>加速度</b>です。',
+        explanation: 'v = Δ<span class="vec">r</span> / Δt と同じ形です。位置の変化率が速度、速度の変化率が加速度。',
+        hints: ['v = Δ<span class="vec">r</span> / Δt でした。では a = Δ<span class="vec">v</span> / Δt の a は？'],
         reveal: {
           title: '同じ操作が、二度きいた',
-          body: '<ul><li>位置ベクトルの先端どうしを結ぶ → <b>変位</b>　これを Δt で割ると <b>速度</b></li><li>速度ベクトルの先端どうしを結ぶ → <b>速度の変化</b>　これを Δt で割ると <b>加速度</b></li></ul><p>矢印の先端どうしを結ぶという、たった一つの操作でした。</p><p>そして加速度の矢印は、ずっと<b>真下</b>を向いていました。この先で意味がわかります。</p>'
+          body: '<p style="text-align:center;font-size:20px;margin:.2em 0 .6em"><span class="eq"><span class="vec">v</span> ＝ <span class="frac"><span class="num">Δ<span class="vec">r</span></span><span class="den">Δt</span></span></span>　　<span class="eq"><span class="vec">a</span> ＝ <span class="frac"><span class="num">Δ<span class="vec">v</span></span><span class="den">Δt</span></span></span></p>'
+              + '<ul><li>位置ベクトルの先端どうしを結ぶ → <b>変位</b>　これを Δt で割ると <b>速度</b></li><li>速度ベクトルの先端どうしを結ぶ → <b>速度の変化</b>　これを Δt で割ると <b>加速度</b></li></ul><p>矢印の先端どうしを結ぶという、たった一つの操作でした。</p><p>そして加速度の矢印は、ずっと<b>真下</b>を向いていました。この先で意味がわかります。</p>'
         }
       }
     ]

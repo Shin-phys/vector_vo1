@@ -105,8 +105,15 @@ export class SymbolBridge {
 
   /** 文字の上に引くベクトルの矢印（→AB の横棒と穂先） */
   _overArrow(parent, textEl, color) {
+    // 矢印は「文字そのもの」の上だけに引く。添字（駅・公園・bef・aft）までは覆わない。
     let bb;
-    try { bb = textEl.getBBox(); } catch (e) { return null; }
+    try {
+      const head = textEl.firstChild;
+      bb = (head && typeof head.getBBox === 'function') ? head.getBBox() : textEl.getBBox();
+      if (!bb || !bb.width) bb = textEl.getBBox();
+    } catch (e) {
+      try { bb = textEl.getBBox(); } catch (e2) { return null; }
+    }
     const g = svgEl('g', { class: 'vec-over', 'pointer-events': 'none' }, parent);
     const y = bb.y - 0.04;
     const x1 = bb.x, x2 = bb.x + bb.width;

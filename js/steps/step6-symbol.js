@@ -32,9 +32,11 @@ export default {
 
     // 位置ベクトル（基準 O から）と、その先端どうしを結ぶ変位
     bridge.arrow('rStation', O, st, 'position',
-      { main: 'r', sub: '駅', at: { x: (O.x + st.x) / 2 + 0.2, y: (O.y + st.y) / 2 - 0.6 } });
+      { main: 'r', sub: '駅', tail: '＝r bef', over: true,
+        at: { x: (O.x + st.x) / 2 + 0.35, y: (O.y + st.y) / 2 - 0.6 } });
     bridge.arrow('rPark', O, pk, 'position',
-      { main: 'r', sub: '公園', at: { x: (O.x + pk.x) / 2 - 0.55, y: (O.y + pk.y) / 2 + 0.45 } });
+      { main: 'r', sub: '公園', tail: '＝r aft', over: true,
+        at: { x: (O.x + pk.x) / 2 - 0.75, y: (O.y + pk.y) / 2 + 0.45 } });
     bridge.arrow('disp', st, pk, 'resultant',
       { styleOverride: { ...VECTOR_STYLES.resultant, color: VECTOR_STYLES.displacement.color },
         main: '駅公園', over: true,
@@ -47,9 +49,9 @@ export default {
     bridge.tidy();
 
     bridge.setFormula([
-      { id: 'disp', main: '駅公園', over: true }, { op: '＝' },
-      { id: 'rPark', main: 'r', sub: '公園' }, { op: '−' },
-      { id: 'rStation', main: 'r', sub: '駅' }
+      { id: 'disp', main: 'Δr', over: true }, { op: '＝' },
+      { id: 'rPark', main: 'r', sub: 'aft', over: true }, { op: '−' },
+      { id: 'rStation', main: 'r', sub: 'bef', over: true }
     ]);
     bridge.setLegend(p.terms);
 
@@ -60,7 +62,28 @@ export default {
 
     /* ---- 進め方 ----
        ①まず直感で Δr の数値を出す → ② bef の成分 → ③ aft の成分 → ④ 式を選ぶ。
-       先に答えを持っている状態で式を選ばせるので、式が「答えを再現する道具」になる。 */
+       先に答えを持っている状態で式を選ばせるので、式が「答えを再現する道具」になる。
+
+       入力欄と選択肢は #interact ではなく、図のすぐ下（bridge のパネル）に出す。
+       図と問題文が離れると、見くらべながら答えられない。 */
+
+    const quiz = document.createElement('div');
+    quiz.className = 'bridge-quiz';
+    bridge.append(quiz);
+
+    // これまでに出した答えを残しておく。④はこれが無いと解けない。
+    const logBox = document.createElement('div');
+    logBox.className = 'bridge-log';
+    logBox.style.display = 'none';
+    bridge.append(logBox);
+    const logs = [];
+    const sgn = (n) => (n > 0 ? '+' + n : n < 0 ? '−' + Math.abs(n) : '0');
+    const pushLog = (html) => {
+      logs.push(html);
+      logBox.style.display = '';
+      logBox.innerHTML = '<div style="font-weight:700;margin-bottom:4px">ここまでに出した答え</div>'
+                       + logs.map(l => `<div>${l}</div>`).join('');
+    };
 
     // データに無い段はとばす（復習コースでは bef / aft の2段を省く）
     let stage = 0;
@@ -72,9 +95,7 @@ export default {
     // 向きはボタン、大きさは数値。スマホの数字キーボードにはマイナスが無く、
     // 符号を打たせると入力できない。向きを選ばせるほうが物理としても自然。
     const askComponents = (cfg, key, onDone) => {
-      const box = ui.el.interact;
-      box.style.display = '';
-      box.innerHTML = `<p class="choice-question">${cfg.question}</p>`;
+      quiz.innerHTML = `<p class="choice-question">${cfg.question}</p>`;
       let dirX = null, dirY = null;
       const gate = () => ui.setActionState('check', {
         disabled: !(ix.value !== '' && iy.value !== '' && dirX && dirY)
@@ -102,7 +123,7 @@ export default {
         const unit = document.createElement('span');
         unit.className = 'unit'; unit.textContent = cfg.unit || 'km';
         row.append(lab, pick, inp, unit);
-        box.appendChild(row);
+        quiz.appendChild(row);
         return inp;
       };
       const ix = mkAxis('x', [{ id: 'plus', label: '＋（右）' }, { id: 'minus', label: '−（左）' }], v => dirX = v);
@@ -114,6 +135,7 @@ export default {
         ctx.storage.recordAttempt('step6', key, ok);
         ui.feedback(cfg.explain, ok ? 'correct' : 'wrong');
         if (cfg.lit) bridge.setLit(cfg.lit);
+        pushLog(`${cfg.logLabel || ''} <b>(${sgn(cfg.answer.x)}, ${sgn(cfg.answer.y)})</b>`);
         ui.setActionState('check', { disabled: true });
         ui.setActionState('next', { disabled: false });
       };
@@ -135,33 +157,40 @@ export default {
     /* ---- ④ 式を選ぶ。①〜③で出した数を根拠に選ばせる ---- */
     const askOrder = () => {
       const q = p.quizOrder;
-      ui.clearInteract();
-      let attempts = 0;
-      const list = ui.renderChoice(q, (i, opt, btn) => {
-        if (list.dataset.done) return;
-        attempts++;
-        if (i === q.correct) {
-          btn.classList.add('is-correct');
-          list.dataset.done = '1';
-          [...list.children].forEach(c => c.disabled = true);
-          ctx.storage.recordAttempt('step6', 'order', true);
-          ui.feedback(q.explain, 'correct');
-          bridge.setLit('disp');
-          ui.setActionState('next', { disabled: false });
-        } else {
-          btn.classList.add('is-wrong'); btn.disabled = true;
-          if (attempts >= 2) {
-            ctx.storage.recordAttempt('step6', 'order', false);
-            list.dataset.done = '1';
-            [...list.children].forEach(c => c.disabled = true);
-            list.children[q.correct].classList.add('is-correct');
-            ui.feedback(q.explain, 'wrong');
+      quiz.innerHTML = `<p class="choice-question">${q.question}</p>`;
+      const list = document.createElement('div');
+      list.className = 'choice-list';
+      let attempts = 0, closed = false;
+      const shut = () => { closed = true; [...list.children].forEach(c => c.disabled = true); };
+      (q.options || []).forEach((opt, i) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'choice';
+        b.innerHTML = `<span class="choice-key">${opt.key || ''}</span><span class="choice-text">${opt.text}</span>`;
+        b.addEventListener('click', () => {
+          if (closed) return;
+          attempts++;
+          if (i === q.correct) {
+            b.classList.add('is-correct'); shut();
+            ctx.storage.recordAttempt('step6', 'order', true);
+            ui.feedback(q.explain, 'correct');
+            bridge.setLit('disp');
             ui.setActionState('next', { disabled: false });
           } else {
-            ui.feedback(opt.feedback || 'もう一度、出発（bef）と到着（aft）はどちらか考えよう。', 'wrong');
+            b.classList.add('is-wrong'); b.disabled = true;
+            if (attempts >= 2) {
+              ctx.storage.recordAttempt('step6', 'order', false);
+              shut();
+              list.children[q.correct].classList.add('is-correct');
+              ui.feedback(q.explain, 'wrong');
+              ui.setActionState('next', { disabled: false });
+            } else {
+              ui.feedback(opt.feedback || 'もう一度、出発（bef）と到着（aft）はどちらか考えよう。', 'wrong');
+            }
           }
-        }
+        });
+        list.appendChild(b);
       });
+      quiz.appendChild(list);
       ui.actions([{ id: 'next', label: '次へ', variant: 'primary', disabled: true,
                     onClick: () => ctx.complete(true) }]);
     };
@@ -174,7 +203,7 @@ export default {
       askComponents(cfg, key, nextStage);
     };
 
-    ui.feedback('まず、いまの図を見て答えてみよう。式はあとで確かめます。', 'info');
+    ui.feedback('まず図を見て答えてみよう。式はあとで確かめます。', 'info');
     nextStage();
   },
 

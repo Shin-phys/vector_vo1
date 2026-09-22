@@ -71,7 +71,19 @@ export class Arrow {
         'paint-order': 'stroke', stroke: COLORS.bg, 'stroke-width': 0.14, 'stroke-linejoin': 'round',
         'text-anchor': 'middle', 'pointer-events': 'none'
       }, this.g);
-      this.labelEl.textContent = opts.label;
+      // 本体・添字・その後ろ、の3つに分けて組む（v[bef] ＝ +3 のような形）
+      const main = svgEl('tspan', { class: 'sym-main' }, this.labelEl);   // 記号は斜体
+      main.textContent = opts.vec ? opts.label + '\u20D7' : opts.label;
+      if (opts.sub) {
+        const sb = svgEl('tspan', {
+          class: 'sym-sub', 'font-size': CANVAS.fontSize * 0.7, dy: CANVAS.fontSize * 0.22
+        }, this.labelEl);   // 添字は立体
+        sb.textContent = opts.sub;
+      }
+      if (opts.tail) {
+        const tl = svgEl('tspan', { dy: opts.sub ? -CANVAS.fontSize * 0.22 : 0 }, this.labelEl);
+        tl.textContent = opts.tail;
+      }
     }
     this.from = { x: 0, y: 0 };
     this.to = { x: 0, y: 0 };
@@ -425,7 +437,8 @@ export class Scene {
       const ends = this.vectorEnds(v.id);
       const hitW = Math.max(0.5, c.pxToUnits(this.profile.minHitSize));
       const arrow = new Arrow(c, 'static', v.style || 'displacement', {
-        label: v.label, interactive: !!v.draggable, hitWidth: hitW
+        label: v.label, sub: v.labelSub, tail: v.labelTail, vec: v.vec,
+        interactive: !!v.draggable, hitWidth: hitW
       });
       arrow.set(ends.from, ends.to);
       if (v.opacity != null) arrow.setOpacity(v.opacity);   // 薄く残す「もとの矢印」用

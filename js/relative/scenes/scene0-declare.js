@@ -18,7 +18,7 @@ export default {
         ${declare.body}
       </div>`;
     ui.actions([
-      // 相対速度だけを単独で扱う授業のための入口。前提（②.5b・④・⑤）だけを短く復習する。
+      // 相対速度だけを単独で扱う授業のための入口。前提（基準・速度・合成）だけを短く復習する。
       { label: '前提を復習してから（5分）', onClick: () => { location.href = 'index.html?course=relative'; } },
       { id: 'next', label: declare.startLabel, variant: 'primary', onClick: () => ctx.complete() }
     ]);

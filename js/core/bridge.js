@@ -29,10 +29,12 @@ export class SymbolBridge {
     figHost.className = 'pane-canvas';
     this.figWrap.appendChild(figHost);
 
+    this.plain = !!opts.plain;          // 図だけ（式パネルもタップ連動も持たない）
     this.panel = document.createElement('div');
     this.panel.className = 'bridge-formula';
 
-    this.root.append(this.figWrap, this.panel);
+    if (this.plain) this.root.append(this.figWrap);
+    else this.root.append(this.figWrap, this.panel);
     host.appendChild(this.root);
 
     this.canvas = new WorldCanvas(figHost, { w: opts.w, h: opts.h });
@@ -59,16 +61,18 @@ export class SymbolBridge {
       styleOverride: style, interactive: true, hitWidth: 0.95
     });
     a.set(from, to);
-    a.hit.style.cursor = 'pointer';
+    if (!this.plain) a.hit.style.cursor = 'pointer';
     const s = this.canvas.toScreen(label.at || { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 });
     const t = this._subText(this.canvas.layers.labels, label.main || '', label.sub || '', label.tail || '', {
       x: s.x, y: s.y, 'font-size': FS, fill: style.color,
       'text-anchor': label.anchor || 'middle'
     }, label.over);
     this.items[id] = { arrow: a, text: t, color: style.color };
-    const on = () => this.setLit(id);
-    a.hit.addEventListener('click', on);
-    this._cleanup.push(() => a.hit.removeEventListener('click', on));
+    if (!this.plain) {
+      const on = () => this.setLit(id);
+      a.hit.addEventListener('click', on);
+      this._cleanup.push(() => a.hit.removeEventListener('click', on));
+    }
     return a;
   }
 
@@ -84,9 +88,10 @@ export class SymbolBridge {
     t.setAttribute('stroke-width', 0.14);
     t.setAttribute('stroke-linejoin', 'round');
     t.setAttribute('pointer-events', 'none');
-    const a = document.createElementNS(NS, 'tspan'); a.textContent = main; t.appendChild(a);
+    const a = document.createElementNS(NS, 'tspan'); a.setAttribute('class', 'sym-main'); a.textContent = main; t.appendChild(a);
     if (sub) {
       const b = document.createElementNS(NS, 'tspan');
+      b.setAttribute('class', 'sym-sub');
       b.setAttribute('font-size', FS * 0.68);
       b.setAttribute('dy', FS * 0.22);
       b.textContent = sub;
@@ -233,7 +238,7 @@ export class SymbolBridge {
   }
 
   /** 右側の欄に自由な要素を足す（学習ログなど） */
-  append(el) { this.panel.appendChild(el); return el; }
+  append(el) { (this.plain ? this.root : this.panel).appendChild(el); return el; }
 
   destroy() {
     this._cleanup.forEach(fn => { try { fn(); } catch (e) {} });

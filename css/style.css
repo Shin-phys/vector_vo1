@@ -401,3 +401,14 @@ body.profile-phone .modal-card h2{font-size:18px;}
 /* 設定メニュー：見出しで区切って読めるようにする */
 .settings-group{margin:14px 0 6px;font-size:14px;font-weight:700;color:var(--muted);}
 .settings-now{font-size:15px;color:var(--muted);margin:2px 0 0;}
+
+/* ---------- 物理量の記号は斜体（ISO 80000-2 / 教科書の慣習） ----------
+   本文の .vec と、図の中の記号（.sym-main）を斜体セリフに。
+   Δ や添字（bef・aft・駅）は説明的な文字なので立体のまま。 */
+.vec, .sym-main{
+  font-family:"Times New Roman","Hiragino Mincho ProN","Yu Mincho",serif;
+  font-style:italic;
+}
+.vec{padding-right:.06em;}
+.sym-sub{font-style:normal;}
+sub{font-style:normal;}

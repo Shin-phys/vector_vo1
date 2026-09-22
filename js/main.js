@@ -12,7 +12,6 @@ import { layout } from './core/layout.js';
 
 /* ===== 全ステップの並び（各話はここから必要な分を取り出して使う） ===== */
 const STEP_ORDER = [
-  'intro',
   'step1',
   'step2',
   'stepv',
@@ -57,7 +56,7 @@ const CHAPTERS = [
 const COURSES = {
   ch1: {
     label: '第1話',
-    steps: ['intro', 'step1', 'step2', 'stepv', 'step25a', 'step25b', 'step6', 'step4', 'reflection'],
+    steps: ['step1', 'step2', 'stepv', 'step25a', 'step25b', 'step6', 'step4', 'reflection'],
     endText: '<b>第1話おわり。</b>位置ベクトルと変位ベクトル、そして基準の話でした。',
     endHint: '矢印を動かしてよいかどうかは、その矢印が何を言っているかで決まりました。',
     next: { label: '発展へ進む →', href: 'index.html?course=ext' }
@@ -141,20 +140,6 @@ const COURSE_INTRO_STEP = {
   unmount() {}
 };
 
-const INTRO_STEP = {
-  id: 'intro',
-  label: '導入',
-  async mount(root, ctx) {
-    const p = ctx.problems || {};
-    ui.showCanvas(true);
-    ui.setScale(p.scaleLabel || '');
-    ui.setPrompt(p.prompt || '');
-    ctx.buildScene(p.scene || { points: {}, vectors: [] });
-    ui.actions([{ label: p.startLabel || 'はじめる', variant: 'primary', onClick: () => ctx.complete(true) }]);
-  },
-  unmount() {}
-};
-
 const state = {
   steps: [],       // {id,label,module,problems}
   index: 0,
@@ -192,15 +177,11 @@ async function boot() {
   }
 
   for (const id of order) {
-    if (id === 'intro') {
-      state.steps.push({ id, label: INTRO_STEP.label, module: INTRO_STEP, problems: problems.intro });
-      continue;
-    }
     const file = STEP_FILES[id];
     if (!file) continue;
     const mod = await import(file);
     let prob = problems[id];
-    // 復習コースでは、②.5b の「ここから話が変わります」だけ出さない。
+    // 復習コースでは、「基準」の「ここから話が変わります」だけ出さない。
     // 直前のステップを前提にした文で、コース冒頭の説明と重複するため。
     // ④⑤の「速度の話に入ります」「動くものが2つ」は復習コースでも必要なので残す。
     if (state.course.key === 'relative' && id === 'step25b' && prob && prob.transition) prob = { ...prob, transition: null };
@@ -262,7 +243,7 @@ const CIRCLED = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫';
 function numberSteps(steps) {
   let n = 0;
   for (const st of steps) {
-    const plain = ['intro', 'courseIntro', 'reflection', 'reflection2'].includes(st.id);
+    const plain = ['courseIntro', 'reflection', 'reflection2'].includes(st.id);
     st.display = plain ? st.label : (CIRCLED[n++] || '') + st.label;
   }
   return steps;

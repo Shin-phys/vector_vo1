@@ -12,27 +12,7 @@ const MAP = {
 
 export const problems = {
 
-  /* ===================== 導入（教師が説明・3分） ===================== */
-  intro: {
-    title: '運動の表し方',
-    minutes: 3,
-    scaleLabel: '1マス = 1 km',
-    prompt: '<b>Sさん</b>が学校を出て、+x に 3 km、そこから +y に 4 km 進んだ。<br>'
-          + '<b>Sさんは、学校からどれだけ離れただろうか。</b><br>'
-          + '<span style="font-size:15px;color:#4b5563">この時間は、Sさんの動きを矢印で表していく。</span>',
-    startLabel: 'はじめる',
-    scene: {
-      points: {
-        school:  { ...MAP.school,  label: '🏫 学校', role: 'origin' },
-        station: { ...MAP.station, label: '🚉 駅' },
-        park:    { ...MAP.park,    label: '🌳 公園' },
-        library: { ...MAP.library, label: '📚 図書館' }
-      },
-      vectors: []
-    }
-  },
-
-  /* ===================== ① 位置を矢印で表す ===================== */
+  /* ===================== 位置を矢印で表す（第1話） ===================== */
   step1: {
     title: '位置を矢印で表す',
     minutes: 4,
@@ -41,7 +21,8 @@ export const problems = {
       {
         id: 's1q1',
         type: 'draw-vector',
-        prompt: 'Sさんは<b>駅</b>にいる。駅は学校から <b>+x に 3、+y に 1</b>。'
+        prompt: '<span style="font-size:15px;color:#4b5563">この時間は、Sさんの<b>位置</b>と<b>移動</b>を矢印で表していく。</span><br>'
+              + 'Sさんは<b>駅</b>にいる。駅は学校から <b>+x に 3、+y に 1</b>。'
               + '<b>学校から駅への矢印</b>を描こう。',
         style: 'position',
         unit: 'km',
@@ -79,7 +60,7 @@ export const problems = {
             station: { ...MAP.station }
           },
           vectors: [
-            { id: 'rSta', from: 'school', to: 'station', style: 'position', locked: true, label: 'r⃗駅' }
+            { id: 'rSta', from: 'school', to: 'station', style: 'position', locked: true, label: 'r', labelSub: '駅', vec: true }
           ]
         },
         answer: { from: { x: 3, y: 3 }, to: { x: 1, y: 6 } },
@@ -135,7 +116,7 @@ export const problems = {
     ]
   },
 
-  /* ===================== ② 変位＝先端から先端へ ===================== */
+  /* ===================== 変位＝先端から先端へ ===================== */
   step2: {
     title: '変位を矢印で表す',
     minutes: 5,
@@ -158,8 +139,8 @@ export const problems = {
           // ①で描いた「学校から」の矢印を、記号つきで残す。
           // 変位が「先端から先端へ」であることが、この2本があると見えやすい。
           vectors: [
-            { id: 'rSta',  from: 'school', to: 'station', style: 'position', locked: true, label: 'r⃗駅' },
-            { id: 'rPark', from: 'school', to: 'park',    style: 'position', locked: true, label: 'r⃗公園' }
+            { id: 'rSta',  from: 'school', to: 'station', style: 'position', locked: true, label: 'r', labelSub: '駅', vec: true },
+            { id: 'rPark', from: 'school', to: 'park',    style: 'position', locked: true, label: 'r', labelSub: '公園', vec: true }
           ]
         },
         answer: { from: { x: 6, y: 4 }, to: { x: 1, y: 6 }, origin: { x: 3, y: 3 } },
@@ -215,7 +196,7 @@ export const problems = {
     ]
   },
 
-  /* ===================== 速度はどの向き？（②の直後） =====================
+  /* ===================== 速度はどの向き？（変位の直後） =====================
      平均の速度の「向き」だけを先に押さえる。v = Δ<span class="vec">r</span> / Δt なので向きは Δ<span class="vec">r</span> と同じ。
      ここで向きを決めておくと、④では「スケールだけが変わる」話に集中できる。 */
   stepv: {
@@ -236,8 +217,8 @@ export const problems = {
             park:    { ...MAP.park }
           },
           vectors: [
-            { id: 'rSta',  from: 'school',  to: 'station', style: 'position',     locked: true, label: 'r⃗駅' },
-            { id: 'rPark', from: 'school',  to: 'park',    style: 'position',     locked: true, label: 'r⃗公園' },
+            { id: 'rSta',  from: 'school',  to: 'station', style: 'position',     locked: true, label: 'r', labelSub: '駅', vec: true },
+            { id: 'rPark', from: 'school',  to: 'park',    style: 'position',     locked: true, label: 'r', labelSub: '公園', vec: true },
             { id: 'disp',  from: 'station', to: 'park',    style: 'displacement',               label: '駅→公園' }
           ]
         },
@@ -269,7 +250,7 @@ export const problems = {
     }
   },
 
-  /* ===================== ②.5a 置き直してみる（最重要） ===================== */
+  /* ===================== 置き直してみる（最重要） ===================== */
   step25a: {
     title: '置き直してみる',
     minutes: 4,
@@ -316,7 +297,7 @@ export const problems = {
       {
         id: 's25a-t1',
         type: 'explore-drag',
-        prompt: '課題1｜2本の矢印を<b>それぞれ動かして</b>みよう。',
+        prompt: '2本の矢印を<b>それぞれ動かして</b>みよう。',
         unit: 'km',
         scene: {
           points: {
@@ -345,11 +326,9 @@ export const problems = {
         },
         hints: ['まず 🔒 のついた矢印（学校→駅）をつかんで動かしてみましょう。'],
         reveal: {
-          title: '長さも向きも変わっていないのに',
-          body: '<p>数字を見ると、<b>どちらも成分は変わっていない</b>。長さも向きもそのまま。</p>'
-              + '<p>それでも位置ベクトルだけは元に戻る。</p>'
-              + '<p>位置ベクトル r は、<b>基準点</b>と<b>その先の地点</b>の、どちらの情報も持っていました。'
-              + 'これを移動すると<b>基準点もその先の地点も変わる</b>。つまり <b>別ものどうしをつないでいる</b>。</p>'
+          title: 'なぜ、片方だけ戻るのか',
+          body: '<p>位置ベクトル <span class="vec">r</span> は、<b>基準点</b>と<b>その先の地点</b>の、どちらの情報も持っている。'
+              + 'これを移動すると<b>基準点も、その先の地点も変わる</b>。つまり <b>別ものどうしをつないでいる</b>。</p>'
               + '<p>変位ベクトル Δ<span class="vec">r</span> が持つのは「位置がどれだけ変化したか」だけ。'
               + '移動しても<b>描く位置が変わるだけで、中身は同じ</b>。</p>'
         }
@@ -385,35 +364,9 @@ export const problems = {
         explanation: '元に戻らなかった変位ベクトルが自由、戻った位置ベクトルが束縛。'
       },
       {
-        id: 's25a-q1',
-        type: 'choice',
-        prompt: '課題1のつづき',
-        question: '位置ベクトルを平行移動すると、何が言えなくなるだろうか。',
-        scene: {
-          points: {
-            school:  { ...MAP.school,  role: 'origin' },
-            station: { ...MAP.station },
-            park:    { ...MAP.park }
-          },
-          vectors: [
-            { id: 'pos',  from: 'school',  to: 'station', style: 'position',     locked: true, label: '位置ベクトル' },
-            { id: 'disp', from: 'station', to: 'park',    style: 'displacement', label: '変位ベクトル' }
-          ]
-        },
-        options: [
-          { key: 'ア', text: '矢印の長さがわからなくなる', feedback: '長さは動かしても変わらなかった。数値表示も「変化なし」。' },
-          { key: 'イ', text: '矢印の向きがわからなくなる', feedback: '向きも変わらなかった。では、変わったのは何か。' },
-          { key: 'ウ', text: 'どの地点を指しているのかがわからなくなる' },
-          { key: 'エ', text: '何も困らない', feedback: '「駅は学校から x +3・y +1 にある」——この文がもう言えない。困らないだろうか。' }
-        ],
-        correctIndex: 2,
-        correctText: 'そのとおり。位置ベクトルは「基準から見てどこか」を言う矢印。置き場所を変えると、それが言えなくなる。',
-        explanation: '位置ベクトルは基準点から出ていることに意味がある。動かすと「どの地点か」が言えなくなる。'
-      },
-      {
         id: 's25a-t2',
         type: 'choice',
-        prompt: '課題2｜2つの物体が、それぞれ別の点へ移動した。',
+        prompt: '課題1｜2つの物体が、それぞれ別の点へ移動した。',
         question: '離れた場所にいる2つの物体の変位が、<b>等しくなる</b>ことはあり得るだろうか。',
         scene: {
           points: {
@@ -429,18 +382,17 @@ export const problems = {
         },
         paths: [[{ x: 1, y: 1 }, { x: 3, y: 2 }], [{ x: 5, y: 5 }, { x: 6, y: 7 }]],
         pathLine: false,
+        prediction: true,
         options: [
           { key: 'ア', text: 'あり得る' },
-          { key: 'イ', text: 'あり得ない', feedback: '本当にそうだろうか。次の画面で、自分で作れるか試そう。' }
+          { key: 'イ', text: 'あり得ない' }
         ],
-        correctIndex: 0,
-        correctText: 'では、本当に作れるか試そう。',
-        explanation: '実際に作れる。次の画面で確かめる。'
+        afterPick: 'では、試してみよう。'
       },
       {
         id: 's25a-t2b',
         type: 'free-place',
-        prompt: '課題2｜4つの点を動かして、<b>2つの変位を等しく</b>してみよう。出発点は離したままでよい。',
+        prompt: '課題1｜4つの点を動かして、<b>2つの変位を等しく</b>してみよう。出発点は離したままでよい。',
         unit: 'km',
         scene: {
           points: {
@@ -475,7 +427,7 @@ export const problems = {
     ]
   },
 
-  /* ===================== ②.5b 基準を取り替えてみる（本アプリの核） ===================== */
+  /* ===================== 基準を取り替えてみる（本アプリの核） ===================== */
   step25b: {
     title: '基準を取り替えてみる',
     minutes: 3,
@@ -545,7 +497,7 @@ export const problems = {
     }
   },
 
-  /* ===================== ③ 変位をつなぐ ===================== */
+  /* ===================== 変位をつなぐ（第2話） ===================== */
   step3: {
     title: '変位をつなぐ',
     minutes: 5,
@@ -650,7 +602,7 @@ export const problems = {
     ]
   },
 
-  /* ===================== ④ 速度の矢印 ===================== */
+  /* ===================== 速度の矢印 ===================== */
   step4: {
     title: '速度の矢印',
     minutes: 6,
@@ -714,27 +666,13 @@ export const problems = {
         }
       },
       {
-        id: 's4q2',
-        type: 'draw-vector',
-        prompt: '<b>x に +4 km・y に +2 km</b> の移動に 2 時間かかった。<b>速度の矢印</b>を描こう。',
-        style: 'velocity',
-        unit: 'km/h',
-        scene: { points: { P: { x: 1, y: 1, label: 'スタート' } }, vectors: [] },
-        answer: { from: { x: 1, y: 1 }, to: { x: 3, y: 2 } },
-        hints: ['x と y を、それぞれ 2 で割る。'],
-        feedback: [
-          { when: 'wrongLength', text: '向きは合っている。x も y も 2 で割るといくつか。' },
-          { when: 'wrongDirection', text: 'x と y を別々に計算する。' }
-        ],
-        explanation: 'x は 4 ÷ 2 ＝ 2、y は 2 ÷ 2 ＝ 1。斜めでも向きは移動と同じ。'
-      },
-      {
         // 第1話の締めくくり。①の +3 と②の −3 を、先端どうしで結ぶ。
         // ここでは「加速度」と名乗らない。発展ページの山場を残す。
         id: 's4dv',
         type: 'draw-vector',
         prompt: 'さっき描いた <b>+3</b> と <b>−3</b> を、同じ点からそろえて並べた。<br>'
-              + '<b>v bef の先端から v aft の先端へ</b>、矢印を描こう。これが<b>速度の変化 Δ<span class="vec">v</span></b>。',
+              + '<b><span class="vec">v</span><sub>bef</sub> の先端から <span class="vec">v</span><sub>aft</sub> の先端へ</b>、矢印を描こう。'
+              + 'これが<b>速度の変化 Δ<span class="vec">v</span></b>。',
         style: 'displacement',
         unit: 'km/h',
         scene: {
@@ -744,18 +682,18 @@ export const problems = {
             Ta: { x: 1, y: 2, label: '' }
           },
           vectors: [
-            { id: 'vbef', from: 'A', to: 'Tb', style: 'velocity', locked: false, label: 'v⃗ bef ＝ +3', appearDelay: 0.1 },
-            { id: 'vaft', from: 'A', to: 'Ta', style: 'velocity', locked: false, label: 'v⃗ aft ＝ −3', appearDelay: 0.6 }
+            { id: 'vbef', from: 'A', to: 'Tb', style: 'velocity', locked: false, label: 'v', labelSub: 'bef', labelTail: ' ＝ +3', vec: true, appearDelay: 0.1 },
+            { id: 'vaft', from: 'A', to: 'Ta', style: 'velocity', locked: false, label: 'v', labelSub: 'aft', labelTail: ' ＝ −3', vec: true, appearDelay: 0.6 }
           ]
         },
         answer: { from: { x: 7, y: 2 }, to: { x: 1, y: 2 }, origin: { x: 4, y: 2 } },
         hints: ['変位のときと同じ。先端から先端へ。'],
         feedback: [
-          { when: 'reversed', text: 'bef の先端から aft の先端へ。逆になっている。' },
+          { when: 'reversed', text: '<span class="vec">v</span><sub>bef</sub> の先端から <span class="vec">v</span><sub>aft</sub> の先端へ。逆になっている。' },
           { when: 'fromOrigin', text: 'A からではない。<b>先端</b>から引く。' },
           { when: 'wrongLength', text: '+3 の先端は x＝7、−3 の先端は x＝1。' }
         ],
-        explanation: 'Δ<span class="vec">v</span> ＝ v aft − v bef ＝ (−3) − (+3) ＝ <b>−6</b> km/h。',
+        explanation: 'Δ<span class="vec">v</span> ＝ <span class="vec">v</span><sub>aft</sub> − <span class="vec">v</span><sub>bef</sub> ＝ (−3) − (+3) ＝ <b>−6</b> km/h。',
         reveal: {
           title: 'では、これを時間で割ると？',
           body: '<p>速度が <b>+3 → −3</b> と変わった。その変化が <b>Δ<span class="vec">v</span> ＝ −6</b>。</p>'
@@ -766,7 +704,7 @@ export const problems = {
     ]
   },
 
-  /* ===================== ⑤ 速度の合成 ===================== */
+  /* ===================== 速度の合成（第2話） ===================== */
   step5: {
     title: '速度の合成',
     transition: {
@@ -851,7 +789,7 @@ export const problems = {
     ]
   },
 
-  /* ===================== ⑥ 記号へ渡す ===================== */
+  /* ===================== 記号へ渡す ===================== */
   // 第2弾シーン4と同じ形の画面。見た目をそろえることで、
   // 相対速度 v_AB = v_B − v_A が「前にやったのと同じ形」に見えるようにする。
   step6: {
@@ -866,14 +804,6 @@ export const problems = {
       { id: 'station', x: 6, y: 4, label: '駅' },
       { id: 'park',    x: 1, y: 6, label: '公園' }
     ],
-    terms: [
-      { id: 'disp', tex: '<span class="vec">駅公園</span>', label: '駅から公園への変位（矢印は 駅→公園）' },
-      { id: 'rPark', tex: 'r<sub>公園</sub>', label: '公園＝<b>到着（aft）</b>の位置ベクトル（O から）' },
-      { id: 'rStation', tex: 'r<sub>駅</sub>', label: '駅＝<b>出発（bef）</b>の位置ベクトル（O から）' }
-    ],
-    rule: '出発が <b>bef</b>、到着が <b>aft</b>。'
-        + '<b>矢印は bef → aft、式は aft − bef。</b>'
-        + 'つまり <b>Δ<span class="vec">r</span> ＝ <span class="vec">r</span><sub>aft</sub> − <span class="vec">r</span><sub>bef</sub></b>。添字は「基準 → 対象」の順。',
     // ①直感 → ②bef → ③aft → ④式、の順で進む（js/steps/step6-symbol.js が順に出す）
     quizValue: {
       question: '① Sさんの<b>駅から公園への変位 Δ<span class="vec">r</span></b> を、向きと大きさで答えよう。',
@@ -912,6 +842,16 @@ export const problems = {
              + ' ①で出した答えと、ぴったり一致した。<br>'
              + '<b>Δ<span class="vec">r</span> ＝ <span class="vec">r</span><sub>aft</sub> − <span class="vec">r</span><sub>bef</sub>。矢印は bef → aft、式は aft − bef</b>。'
     }
+    ,
+    summary: {
+      title: '記号のきまり',
+      body: '<p>移動<b>前</b>が <b>bef</b>、移動<b>後</b>が <b>aft</b>。</p>'
+          + '<p style="font-size:20px;margin:.4em 0"><b>矢印は bef → aft、式は aft − bef。</b></p>'
+          + '<p style="text-align:center;font-size:21px;margin:.2em 0 .6em">'
+          + '<b>Δ<span class="vec">r</span> ＝ <span class="vec">r</span><sub>aft</sub> − <span class="vec">r</span><sub>bef</sub></b></p>'
+          + '<p>添字は「基準 → 対象」の順に書く。</p>',
+      button: 'わかった'
+    }
   },
 
 
@@ -941,8 +881,8 @@ export const problems = {
             P4: { x: 8, y: 5, label: 'P₄' }
           },
           vectors: [
-            { id: 'r0',  from: 'O',  to: 'P0', style: 'position',     locked: true, label: 'r⃗₀' },
-            { id: 'r1',  from: 'O',  to: 'P1', style: 'position',     locked: true, label: 'r⃗₁' },
+            { id: 'r0',  from: 'O',  to: 'P0', style: 'position',     locked: true, label: 'r', labelSub: '0', vec: true },
+            { id: 'r1',  from: 'O',  to: 'P1', style: 'position',     locked: true, label: 'r', labelSub: '1', vec: true },
             { id: 'd01', from: 'P0', to: 'P1', style: 'displacement', locked: false, label: 'P₀→P₁' }
           ]
         },
@@ -979,18 +919,18 @@ export const problems = {
             P4: { x: 8, y: 5, label: 'P₄' }
           },
           vectors: [
-            { id: 'r0', from: 'O', to: 'P0', style: 'position', locked: true, label: 'r⃗₀' },
-            { id: 'r1', from: 'O', to: 'P1', style: 'position', locked: true, label: 'r⃗₁' },
-            { id: 'r2', from: 'O', to: 'P2', style: 'position', locked: true, label: 'r⃗₂' },
-            { id: 'r3', from: 'O', to: 'P3', style: 'position', locked: true, label: 'r⃗₃' },
-            { id: 'r4', from: 'O', to: 'P4', style: 'position', locked: true, label: 'r⃗₄' }
+            { id: 'r0', from: 'O', to: 'P0', style: 'position', locked: true, label: 'r', labelSub: '0', vec: true },
+            { id: 'r1', from: 'O', to: 'P1', style: 'position', locked: true, label: 'r', labelSub: '1', vec: true },
+            { id: 'r2', from: 'O', to: 'P2', style: 'position', locked: true, label: 'r', labelSub: '2', vec: true },
+            { id: 'r3', from: 'O', to: 'P3', style: 'position', locked: true, label: 'r', labelSub: '3', vec: true },
+            { id: 'r4', from: 'O', to: 'P4', style: 'position', locked: true, label: 'r', labelSub: '4', vec: true }
           ]
         },
         targets: [
-          { name: 'v⃗₀₁', label: 'v⃗₀₁', answer: { from: { x: 0, y: 1 }, to: { x: 2, y: 5 } } },
-          { name: 'v⃗₁₂', label: 'v⃗₁₂', answer: { from: { x: 2, y: 5 }, to: { x: 4, y: 7 } } },
-          { name: 'v⃗₂₃', label: 'v⃗₂₃', answer: { from: { x: 4, y: 7 }, to: { x: 6, y: 7 } } },
-          { name: 'v⃗₃₄', label: 'v⃗₃₄', answer: { from: { x: 6, y: 7 }, to: { x: 8, y: 5 } } }
+          { name: 'v⃗₀₁', label: 'v', labelSub: '01', vec: true, answer: { from: { x: 0, y: 1 }, to: { x: 2, y: 5 } } },
+          { name: 'v⃗₁₂', label: 'v', labelSub: '12', vec: true, answer: { from: { x: 2, y: 5 }, to: { x: 4, y: 7 } } },
+          { name: 'v⃗₂₃', label: 'v', labelSub: '23', vec: true, answer: { from: { x: 4, y: 7 }, to: { x: 6, y: 7 } } },
+          { name: 'v⃗₃₄', label: 'v', labelSub: '34', vec: true, answer: { from: { x: 6, y: 7 }, to: { x: 8, y: 5 } } }
         ],
         progressText: 'あと {n} 本。順番はどれからでもよい。',
         doneText: '4本そろった。x 成分はずっと 2、y 成分だけが <b>4 → 2 → 0 → −2</b>。',
@@ -1036,17 +976,17 @@ export const problems = {
             P4: { x: 8, y: 5, label: 'P₄' }
           },
           vectors: [
-            { id: 'v01', from: 'P0', to: 'P1', style: 'velocity', locked: false, draggable: true, label: 'v⃗₀₁' },
-            { id: 'v12', from: 'P1', to: 'P2', style: 'velocity', locked: false, draggable: true, label: 'v⃗₁₂' },
-            { id: 'v23', from: 'P2', to: 'P3', style: 'velocity', locked: false, draggable: true, label: 'v⃗₂₃' },
-            { id: 'v34', from: 'P3', to: 'P4', style: 'velocity', locked: false, draggable: true, label: 'v⃗₃₄' }
+            { id: 'v01', from: 'P0', to: 'P1', style: 'velocity', locked: false, draggable: true, label: 'v', labelSub: '01', vec: true },
+            { id: 'v12', from: 'P1', to: 'P2', style: 'velocity', locked: false, draggable: true, label: 'v', labelSub: '12', vec: true },
+            { id: 'v23', from: 'P2', to: 'P3', style: 'velocity', locked: false, draggable: true, label: 'v', labelSub: '23', vec: true },
+            { id: 'v34', from: 'P3', to: 'P4', style: 'velocity', locked: false, draggable: true, label: 'v', labelSub: '34', vec: true }
           ]
         },
         readouts: [
-          { id: 'v01', label: 'v⃗₀₁', vector: 'v01', watch: true, unchangedBadge: true },
-          { id: 'v12', label: 'v⃗₁₂', vector: 'v12', watch: true, unchangedBadge: true },
-          { id: 'v23', label: 'v⃗₂₃', vector: 'v23', watch: true, unchangedBadge: true },
-          { id: 'v34', label: 'v⃗₃₄', vector: 'v34', watch: true, unchangedBadge: true }
+          { id: 'v01', label: 'v', labelSub: '01', vec: true, vector: 'v01', watch: true, unchangedBadge: true },
+          { id: 'v12', label: 'v', labelSub: '12', vec: true, vector: 'v12', watch: true, unchangedBadge: true },
+          { id: 'v23', label: 'v', labelSub: '23', vec: true, vector: 'v23', watch: true, unchangedBadge: true },
+          { id: 'v34', label: 'v', labelSub: '34', vec: true, vector: 'v34', watch: true, unchangedBadge: true }
         ],
         conditions: [{ kind: 'vectorsShareStart', of: ['v01', 'v12', 'v23', 'v34'], at: 'A' }],
         hintText: '矢印の線をつかんで運ぶ。運んでも成分は変わらない。',
@@ -1074,16 +1014,16 @@ export const problems = {
             T4: { x: 4, y: 1, label: '' }
           },
           vectors: [
-            { id: 'v01', from: 'A', to: 'T1', style: 'velocity', locked: false, label: 'v⃗₀₁', appearDelay: 0.1 },
-            { id: 'v12', from: 'A', to: 'T2', style: 'velocity', locked: false, label: 'v⃗₁₂', appearDelay: 0.4 },
-            { id: 'v23', from: 'A', to: 'T3', style: 'velocity', locked: false, label: 'v⃗₂₃', appearDelay: 0.7 },
-            { id: 'v34', from: 'A', to: 'T4', style: 'velocity', locked: false, label: 'v⃗₃₄', appearDelay: 1.0 }
+            { id: 'v01', from: 'A', to: 'T1', style: 'velocity', locked: false, label: 'v', labelSub: '01', vec: true, appearDelay: 0.1 },
+            { id: 'v12', from: 'A', to: 'T2', style: 'velocity', locked: false, label: 'v', labelSub: '12', vec: true, appearDelay: 0.4 },
+            { id: 'v23', from: 'A', to: 'T3', style: 'velocity', locked: false, label: 'v', labelSub: '23', vec: true, appearDelay: 0.7 },
+            { id: 'v34', from: 'A', to: 'T4', style: 'velocity', locked: false, label: 'v', labelSub: '34', vec: true, appearDelay: 1.0 }
           ]
         },
         targets: [
-          { name: 'Δv⃗₁', label: 'Δv⃗₁', answer: { from: { x: 4, y: 7 }, to: { x: 4, y: 5 } } },
-          { name: 'Δv⃗₂', label: 'Δv⃗₂', answer: { from: { x: 4, y: 5 }, to: { x: 4, y: 3 } } },
-          { name: 'Δv⃗₃', label: 'Δv⃗₃', answer: { from: { x: 4, y: 3 }, to: { x: 4, y: 1 } } }
+          { name: 'Δv⃗₁', label: 'Δv', labelSub: '1', vec: true, answer: { from: { x: 4, y: 7 }, to: { x: 4, y: 5 } } },
+          { name: 'Δv⃗₂', label: 'Δv', labelSub: '2', vec: true, answer: { from: { x: 4, y: 5 }, to: { x: 4, y: 3 } } },
+          { name: 'Δv⃗₃', label: 'Δv', labelSub: '3', vec: true, answer: { from: { x: 4, y: 3 }, to: { x: 4, y: 1 } } }
         ],
         progressText: 'あと {n} 本。',
         doneText: '3本とも、真下に 2。',
@@ -1122,13 +1062,13 @@ export const problems = {
             T4: { x: 4, y: 1, label: '' }
           },
           vectors: [
-            { id: 'v01', from: 'A',  to: 'T1', style: 'velocity',     locked: false, label: 'v⃗₀₁' },
-            { id: 'v12', from: 'A',  to: 'T2', style: 'velocity',     locked: false, label: 'v⃗₁₂' },
-            { id: 'v23', from: 'A',  to: 'T3', style: 'velocity',     locked: false, label: 'v⃗₂₃' },
-            { id: 'v34', from: 'A',  to: 'T4', style: 'velocity',     locked: false, label: 'v⃗₃₄' },
-            { id: 'dv1', from: 'T1', to: 'T2', style: 'displacement', locked: false, label: 'Δv⃗₁' },
-            { id: 'dv2', from: 'T2', to: 'T3', style: 'displacement', locked: false, label: 'Δv⃗₂' },
-            { id: 'dv3', from: 'T3', to: 'T4', style: 'displacement', locked: false, label: 'Δv⃗₃' }
+            { id: 'v01', from: 'A',  to: 'T1', style: 'velocity',     locked: false, label: 'v', labelSub: '01', vec: true },
+            { id: 'v12', from: 'A',  to: 'T2', style: 'velocity',     locked: false, label: 'v', labelSub: '12', vec: true },
+            { id: 'v23', from: 'A',  to: 'T3', style: 'velocity',     locked: false, label: 'v', labelSub: '23', vec: true },
+            { id: 'v34', from: 'A',  to: 'T4', style: 'velocity',     locked: false, label: 'v', labelSub: '34', vec: true },
+            { id: 'dv1', from: 'T1', to: 'T2', style: 'displacement', locked: false, label: 'Δv', labelSub: '1', vec: true },
+            { id: 'dv2', from: 'T2', to: 'T3', style: 'displacement', locked: false, label: 'Δv', labelSub: '2', vec: true },
+            { id: 'dv3', from: 'T3', to: 'T4', style: 'displacement', locked: false, label: 'Δv', labelSub: '3', vec: true }
           ]
         },
         options: [
@@ -1156,13 +1096,13 @@ export const problems = {
             T4: { x: 4, y: 1, label: '' }
           },
           vectors: [
-            { id: 'v01', from: 'A',  to: 'T1', style: 'velocity',     locked: false, label: 'v⃗₀₁' },
-            { id: 'v12', from: 'A',  to: 'T2', style: 'velocity',     locked: false, label: 'v⃗₁₂' },
-            { id: 'v23', from: 'A',  to: 'T3', style: 'velocity',     locked: false, label: 'v⃗₂₃' },
-            { id: 'v34', from: 'A',  to: 'T4', style: 'velocity',     locked: false, label: 'v⃗₃₄' },
-            { id: 'dv1', from: 'T1', to: 'T2', style: 'displacement', locked: false, label: 'Δv⃗₁' },
-            { id: 'dv2', from: 'T2', to: 'T3', style: 'displacement', locked: false, label: 'Δv⃗₂' },
-            { id: 'dv3', from: 'T3', to: 'T4', style: 'displacement', locked: false, label: 'Δv⃗₃' }
+            { id: 'v01', from: 'A',  to: 'T1', style: 'velocity',     locked: false, label: 'v', labelSub: '01', vec: true },
+            { id: 'v12', from: 'A',  to: 'T2', style: 'velocity',     locked: false, label: 'v', labelSub: '12', vec: true },
+            { id: 'v23', from: 'A',  to: 'T3', style: 'velocity',     locked: false, label: 'v', labelSub: '23', vec: true },
+            { id: 'v34', from: 'A',  to: 'T4', style: 'velocity',     locked: false, label: 'v', labelSub: '34', vec: true },
+            { id: 'dv1', from: 'T1', to: 'T2', style: 'displacement', locked: false, label: 'Δv', labelSub: '1', vec: true },
+            { id: 'dv2', from: 'T2', to: 'T3', style: 'displacement', locked: false, label: 'Δv', labelSub: '2', vec: true },
+            { id: 'dv3', from: 'T3', to: 'T4', style: 'displacement', locked: false, label: 'Δv', labelSub: '3', vec: true }
           ]
         },
         accept: ['加速度'],

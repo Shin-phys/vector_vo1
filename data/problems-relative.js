@@ -187,7 +187,7 @@ export const switchScene = {
       correct: 1,
       requireBothFrames: true,     // AとBの両方に切り替えてから答えさせる
       hint: '実際に基準をAにして矢印を見て、つぎにBにして見比べてから答えよう。',
-      explain: 'v<sub>AB</sub> = v<sub>B</sub> − v<sub>A</sub>、v<sub>BA</sub> = v<sub>A</sub> − v<sub>B</sub>。引く順が逆なので<b>大きさは同じで向きが逆</b>になります。'
+      explain: '<span class="vec">v</span><sub>AB</sub> = <span class="vec">v</span><sub>B</sub> − <span class="vec">v</span><sub>A</sub>、<span class="vec">v</span><sub>BA</sub> = <span class="vec">v</span><sub>A</sub> − <span class="vec">v</span><sub>B</sub>。引く順が逆なので<b>大きさは同じで向きが逆</b>になります。'
     }
   ]
 };
@@ -197,9 +197,9 @@ export const symbolScene = {
   prompt: '図と式を見比べよう。どちらかをタップすると、両方が光ります。',
   formula: 'v_AB = v_B − v_A',
   terms: [
-    { id: 'vAB', tex: 'v<sub>AB</sub>', label: 'Aから見たBの速度', arrow: 'relative' },
-    { id: 'vB',  tex: 'v<sub>B</sub>',  label: 'Bの速度（地面から見て）', arrow: 'B' },
-    { id: 'vA',  tex: 'v<sub>A</sub>',  label: 'Aの速度（地面から見て）', arrow: 'A' }
+    { id: 'vAB', tex: '<span class="vec">v</span><sub>AB</sub>', label: 'Aから見たBの速度', arrow: 'relative' },
+    { id: 'vB',  tex: '<span class="vec">v</span><sub>B</sub>',  label: 'Bの速度（地面から見て）', arrow: 'B' },
+    { id: 'vA',  tex: '<span class="vec">v</span><sub>A</sub>',  label: 'Aの速度（地面から見て）', arrow: 'A' }
   ],
   quiz: {
     question: 'Aの速度が<b>+x 向き 20 m/s</b>、Bの速度が<b>+x 向き 30 m/s</b> のとき、Aから見たBの速度は？',
@@ -210,6 +210,6 @@ export const symbolScene = {
       { id: 'east', label: '+x 向き' },
       { id: 'west', label: '−x 向き' }
     ],
-    explain: 'v<sub>AB</sub> = v<sub>B</sub> − v<sub>A</sub> = 30 − 20 = <b>10</b>。符号が＋なので<b>+x 向き</b>。'
+    explain: '<span class="vec">v</span><sub>AB</sub> = <span class="vec">v</span><sub>B</sub> − <span class="vec">v</span><sub>A</sub> = 30 − 20 = <b>10</b>。符号が＋なので<b>+x 向き</b>。'
   }
 };

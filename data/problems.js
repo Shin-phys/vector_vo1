@@ -19,22 +19,24 @@ export const problems = {
     scaleLabel: '1マス = 1 km',
     items: [
       {
+        // 基準は「公園」から始める。次の問いで基準を学校に移すので、
+        // ここで描いた矢印は「基準が変われば矢印も変わる」の比較対象になる。
         id: 's1q1',
         type: 'draw-vector',
         prompt: '<span style="font-size:15px;color:#4b5563">この時間は、Sさんの<b>位置</b>と<b>移動</b>を矢印で表していく。</span><br>'
-              + 'Sさんは<b>駅</b>にいる。駅は学校から <b>+x に 3、+y に 1</b>。'
-              + '<b>学校から駅への矢印</b>を描こう。',
+              + 'Sさんは<b>駅</b>にいる。いま基準にしているのは<b>公園</b>。'
+              + '駅は公園から <b>+x に 5、−y に 2</b>。<b>公園から駅への矢印</b>を描こう。',
         style: 'position',
         unit: 'km',
-        origin: { ...MAP.school },
+        origin: { ...MAP.park },
         landmarks: [{ ...MAP.station }],
-        answer: { from: { x: 3, y: 3 }, to: { x: 6, y: 4 } },
-        hints: ['どこから描き始めるだろうか。「学校から駅へ」。'],
+        answer: { from: { x: 1, y: 6 }, to: { x: 6, y: 4 } },
+        hints: ['どこから描き始めるだろうか。「公園から駅へ」。'],
         feedback: [
-          { when: 'reversed', text: '向きが逆。学校から駅へ、の順に。' },
-          { when: 'wrongStart', text: '描き始めは学校。' }
+          { when: 'reversed', text: '向きが逆。公園から駅へ、の順に。' },
+          { when: 'wrongStart', text: '描き始めは公園。いまの基準は公園。' }
         ],
-        explanation: '学校から +x に 3、+y に 1 進んだ先が駅。',
+        explanation: '公園から +x に 5、−y に 2 進んだ先が駅。',
         reveal: {
           title: 'この矢印が「位置ベクトル」',
           body: '<p>基準点から地点へ向かう矢印を <b>位置ベクトル <span class="vec">r</span></b> という。</p>'
@@ -44,16 +46,52 @@ export const problems = {
         }
       },
       {
-        // ② 同じ基準点から、もう1つの地点へ。この2本の先端どうしを結ぶのが次の変位。
+        // 地点（駅）はそのまま、基準だけを公園から学校へ。
+        // 同じ駅を指しているのに矢印が変わる、をその場で見せる。
         id: 's1q2',
         type: 'draw-vector',
-        prompt: 'Sさんはこれから<b>公園</b>へ向かう。公園は学校から <b>−x に 2、+y に 3</b>。'
-              + '同じ基準点から、<b>学校から公園への矢印</b>を描こう。',
+        prompt: '基準を<b>学校</b>に取り替える。駅は動いていない。'
+              + 'それでも<b>学校から駅への矢印</b>はどうなるだろうか。引いて確かめよう。',
+        style: 'position',
+        unit: 'km',
+        origin: { ...MAP.school },
+        // 公園→駅 は残したまま。2本を見比べさせる。
+        scene: {
+          points: {
+            park:    { ...MAP.park },
+            station: { ...MAP.station }
+          },
+          vectors: [
+            { id: 'rFromPark', from: 'park', to: 'station', style: 'position', locked: true, label: '公園から' }
+          ]
+        },
+        answer: { from: { x: 3, y: 3 }, to: { x: 6, y: 4 }, origin: { x: 1, y: 6 } },
+        hints: ['基準が公園から学校に変わった。どこから描き始めるか。'],
+        feedback: [
+          { when: 'reversed', text: '向きが逆。学校から駅へ。' },
+          { when: 'fromOrigin', text: '公園からではない。いまの基準は学校。' },
+          { when: 'wrongStart', text: '描き始めは学校。' }
+        ],
+        explanation: '学校から +x に 3、+y に 1 進んだ先が駅。',
+        reveal: {
+          title: '駅は動いていないのに、矢印は変わった',
+          body: '<p><b>駅の位置は変わっていない。</b>それでも基準点を公園から学校に変えると、'
+              + '矢印は<b>向きも長さも成分も</b>変わった。</p>'
+              + '<p>位置ベクトル <span class="vec">r</span> は、<b>基準点</b>と<b>その先の地点</b>の、どちらの情報も持っている。'
+              + 'だから基準が変われば、矢印も変わる。</p>'
+        }
+      },
+      {
+        // 公園→駅 の矢印はここで消す。基準は学校ひとつに定まり、
+        // 学校から2本（駅・公園）そろう。この2本の先端どうしが、次の変位になる。
+        id: 's1q3',
+        type: 'draw-vector',
+        prompt: '基準は<b>学校</b>のまま。Sさんはこれから<b>公園</b>へ向かう。'
+              + '公園は学校から <b>−x に 2、+y に 3</b>。<b>学校から公園への矢印</b>を描こう。',
         style: 'position',
         unit: 'km',
         origin: { ...MAP.school },
         landmarks: [{ ...MAP.park }],
-        // 1問目で描いた「学校→駅」は残したまま。同じ基準点から2本そろうところを見せる。
         scene: {
           points: {
             school:  { ...MAP.school, hidden: true },   // 点は item.origin が描くので二重にしない
@@ -73,44 +111,8 @@ export const problems = {
         explanation: '学校から −x に 2、+y に 3 進んだ先が公園。',
         reveal: {
           title: '同じ基準点から、2本',
-          body: '<p><b>学校→駅</b> と <b>学校→公園</b>。同じ基準点から2本そろった。</p>'
-              + '<p>次は、この<b>2本の先端どうし</b>。</p>'
-        }
-      },
-      {
-        // 1問目で描いた「学校→駅」を残したまま、基準点だけを公園に変える。
-        // 同じ「駅」を指しているのに矢印が変わることを、その場で見せるのがねらい。
-        id: 's1q3',
-        type: 'draw-vector',
-        prompt: '基準を<b>公園</b>に取り替える。<b>公園から駅</b>はどうなるだろうか。'
-              + '矢印を引いて、<b>向きと成分</b>を確かめよう。',
-        style: 'position',
-        unit: 'km',
-        origin: { ...MAP.park },
-        // 公園は item.origin として描かれるので、ここには入れない（二重描きになる）
-        scene: {
-          points: {
-            school:  { ...MAP.school },
-            station: { ...MAP.station }
-          },
-          vectors: [
-            { id: 'r1', from: 'school', to: 'station', style: 'position', locked: true, label: '学校から' }
-          ]
-        },
-        answer: { from: { x: 1, y: 6 }, to: { x: 6, y: 4 }, origin: { x: 3, y: 3 } },
-        hints: ['基準が学校から公園に変わった。どこから描き始めるか。'],
-        feedback: [
-          { when: 'reversed', text: '向きが逆。公園から駅へ。' },
-          { when: 'fromOrigin', text: '学校からではない。いまの基準は公園。' },
-          { when: 'wrongStart', text: '描き始めは公園。' }
-        ],
-        explanation: '公園から +x に 5、−y に 2 進んだ先が駅。',
-        reveal: {
-          title: '駅は動いていないのに、矢印は変わった',
-          body: '<p><b>駅の位置は変わっていない。</b>それでも基準点を学校から公園に変えると、'
-              + '矢印は<b>向きも長さも成分も</b>変わった。</p>'
-              + '<p>位置ベクトル <span class="vec">r</span> は、<b>基準点</b>と<b>その先の地点</b>の、どちらの情報も持っている。'
-              + 'だから基準が変われば、矢印も変わる。</p>'
+          body: '<p>基準点を<b>学校</b>ひとつに決めると、<b>学校→駅</b> と <b>学校→公園</b> の2本がそろう。</p>'
+              + '<p>基準がそろってはじめて、2本を見比べられる。次は、この<b>2本の先端どうし</b>。</p>'
         }
       }
     ]
@@ -232,8 +234,8 @@ export const problems = {
         hints: ['Sさんが「どの向きに動いたか」を表す矢印はどれか。'],
         reveal: {
           title: 'なぜ <span class="vec">v</span> と Δ<span class="vec">r</span> は同じ向きなのか',
-          body: '<p style="text-align:center;font-size:21px;margin:.2em 0 .6em"><span class="eq"><span class="vec">v</span> ＝ <span class="frac"><span class="num">Δ<span class="vec">r</span></span><span class="den">Δt</span></span></span></p>'
-              + '<p>Δt は必ず正の数。<b>正の数で割っただけ</b>なので向きは変わらない。</p>'
+          body: '<p style="text-align:center;font-size:21px;margin:.2em 0 .6em"><span class="eq"><span class="vec">v</span> ＝ <span class="frac"><span class="num">Δ<span class="vec">r</span></span><span class="den">Δ<span class="sym">t</span></span></span></span></p>'
+              + '<p>Δ<span class="sym">t</span> は必ず正の数。<b>正の数で割っただけ</b>なので向きは変わらない。</p>'
               + '<p>Δ<span class="vec">r</span> と <span class="vec">v</span> で変わるのは<b>長さ</b>だけ。「1マスが何を表すか」が変わる。</p>'
         }
       }
@@ -241,10 +243,10 @@ export const problems = {
     summary: {
       title: 'ここまでの整理',
       body: '<ol style="line-height:1.9">'
-          + '<li><b>r（位置ベクトル）</b>は、<b>基準点</b>と<b>その地点</b>の、どちらの情報も持っている</li>'
-          + '<li>はじめの r の先端から、あとの r の先端へ結んだ矢印を <b>Δ<span class="vec">r</span>（変位ベクトル）</b> という</li>'
+          + '<li><b><span class="vec">r</span>（位置ベクトル）</b>は、<b>基準点</b>と<b>その地点</b>の、どちらの情報も持っている</li>'
+          + '<li>はじめの <span class="vec">r</span> の先端から、あとの <span class="vec">r</span> の先端へ結んだ矢印を <b>Δ<span class="vec">r</span>（変位ベクトル）</b> という</li>'
           + '<li>Δ<span class="vec">r</span> は「位置が<b>どれだけ変化したか</b>」の情報を持つ</li>'
-          + '<li><b><span class="vec">v</span> の向きは Δ<span class="vec">r</span> と同じ</b>（<span class="eq"><span class="vec">v</span> ＝ <span class="frac"><span class="num">Δ<span class="vec">r</span></span><span class="den">Δt</span></span></span>　だから）</li>'
+          + '<li><b><span class="vec">v</span> の向きは Δ<span class="vec">r</span> と同じ</b>（<span class="eq"><span class="vec">v</span> ＝ <span class="frac"><span class="num">Δ<span class="vec">r</span></span><span class="den">Δ<span class="sym">t</span></span></span></span>　だから）</li>'
           + '</ol>',
       button: '先へ進む'
     }
@@ -261,7 +263,7 @@ export const problems = {
           + '<ul><li><b>自由ベクトル</b>　…　置き直して（平行移動して）よいもの</li>'
           + '<li><b>束縛ベクトル</b>　…　置き直すと意味が壊れるもの</li></ul>'
           + '<p>画面の2本が、それぞれ持っている情報を確かめておく。</p>'
-          + '<ul><li><b>位置ベクトル</b> r（学校→駅）…　<b>基準点</b>（学校）と<b>その地点</b>（駅）の、'
+          + '<ul><li><b>位置ベクトル</b> <span class="vec">r</span>（学校→駅）…　<b>基準点</b>（学校）と<b>その地点</b>（駅）の、'
           + '<b>どちらの情報も</b>持っている</li>'
           + '<li><b>変位ベクトル</b> Δ<span class="vec">r</span>（駅→公園）…　<b>位置がどれだけ変化したか</b>の情報を持っている</li></ul>'
           + '<p>どちらが自由で、どちらが束縛だろうか。まず予想し、そのあと<b>実際に動かして</b>確かめる。</p>'
@@ -328,7 +330,7 @@ export const problems = {
         reveal: {
           title: 'なぜ、片方だけ戻るのか',
           body: '<p>位置ベクトル <span class="vec">r</span> は、<b>基準点</b>と<b>その先の地点</b>の、どちらの情報も持っている。'
-              + 'これを移動すると<b>基準点も、その先の地点も変わる</b>。つまり <b>別ものどうしをつないでいる</b>。</p>'
+              + 'これを移動すると<b>基準点も、その先の地点も変わる</b>。つまり <b>別もの同士をつなぐことになってしまう</b>。</p>'
               + '<p>変位ベクトル Δ<span class="vec">r</span> が持つのは「位置がどれだけ変化したか」だけ。'
               + '移動しても<b>描く位置が変わるだけで、中身は同じ</b>。</p>'
         }
@@ -362,6 +364,28 @@ export const problems = {
         correctIndex: 1,
         correctText: 'そのとおり。位置ベクトルが<b>束縛</b>、変位ベクトルが<b>自由</b>でした。',
         explanation: '元に戻らなかった変位ベクトルが自由、戻った位置ベクトルが束縛。'
+      },
+      {
+        // ここで一度立ち止まる。「変位も動かしてはいけないのでは」という反論は、
+        // 教室で必ず出るし、正しい直観でもある。潰さずに受け止めて、次の例に渡す。
+        id: 's25a-note',
+        type: 'note',
+        prompt: '立ち止まって考えてみよう',
+        body: '<p>「<b>この点（始点）からその点（終点）まで変位した</b>」という<b>事実</b>が重要なのだから、'
+            + 'こちらも動かしてはいけないのでは？　という考えもあるだろう。</p>'
+            + '<p>では、次の例ではどうだろう。</p>',
+        button: '次の例へ',
+        scene: {
+          points: {
+            school:  { ...MAP.school,  role: 'origin' },
+            station: { ...MAP.station },
+            park:    { ...MAP.park }
+          },
+          vectors: [
+            { id: 'pos',  from: 'school',  to: 'station', style: 'position',     locked: true, label: '位置ベクトル' },
+            { id: 'disp', from: 'station', to: 'park',    style: 'displacement',               label: '変位ベクトル' }
+          ]
+        }
       },
       {
         id: 's25a-t2',
@@ -421,7 +445,7 @@ export const problems = {
         hints: ['片方の成分を読み取り、もう片方を同じ成分にする。'],
         reveal: {
           title: '🔒 のルール',
-          body: '<ul><li><b>位置ベクトル</b> r ＝ 基準点とその先の地点、どちらの情報も持つ。置き直すと別ものになる（🔒 がつく）</li><li><b>変位ベクトル</b> Δ<span class="vec">r</span> ＝ 位置の変化の情報だけを持つ。どこに置いてもよい</li></ul><p>この先も、🔒 のついた矢印は動かしても元に戻る。</p>'
+          body: '<ul><li><b>位置ベクトル</b> <span class="vec">r</span> ＝ 基準点とその先の地点、どちらの情報も持つ。置き直すと別ものになる（🔒 がつく）</li><li><b>変位ベクトル</b> Δ<span class="vec">r</span> ＝ 位置の変化の情報だけを持つ。どこに置いてもよい</li></ul><p>この先も、🔒 のついた矢印は動かしても元に戻る。</p>'
         }
       }
     ]
@@ -864,7 +888,7 @@ export const problems = {
   ext1: {
     title: '速度ベクトルをつくる',
     minutes: 5,
-    scaleLabel: '1マス = 1 m　／　コマの間隔は Δt = 1 秒',
+    scaleLabel: '1マス = 1 m　／　コマの間隔は Δ<span class="sym">t</span> ＝ 1 秒',
     items: [
       {
         id: 'ext1-t0',
@@ -887,14 +911,14 @@ export const problems = {
           ]
         },
         readouts: [
-          { id: 'r0',  label: '位置ベクトル r₀', vector: 'r0',  watch: true },
-          { id: 'r1',  label: '位置ベクトル r₁', vector: 'r1',  watch: true },
+          { id: 'r0',  label: '位置ベクトル <span class="vec">r</span><sub>0</sub>', vector: 'r0',  watch: true },
+          { id: 'r1',  label: '位置ベクトル <span class="vec">r</span><sub>1</sub>', vector: 'r1',  watch: true },
           { id: 'd01', label: '変位 P₀→P₁',      vector: 'd01', watch: true, unchangedBadge: true }
         ],
         requirement: { kind: 'distinctPositions', point: 'O', count: 2 },
         progress: {
           remaining: 'あと {n} か所。どれが赤く光るか見ておこう。',
-          done: '第1話と同じ。<b>r は変わる。変位は変わらない。</b>'
+          done: '第1話と同じ。<b><span class="vec">r</span> は変わる。変位は変わらない。</b>'
         },
         hints: ['基準を動かすと何が変わり、何が変わらなかっただろうか。'],
         reveal: {
@@ -906,7 +930,7 @@ export const problems = {
         id: 'ext1-v',
         type: 'draw-multi',
         prompt: '<b>P₀→P₁、P₁→P₂、P₂→P₃、P₃→P₄</b> の変位を、<b>4本まとめて</b>描こう。<br>'
-              + 'Δt = 1 秒なので、これがそのまま<b>速度ベクトル</b>になる。',
+              + 'Δ<span class="sym">t</span> ＝ 1 秒なので、これがそのまま<b>速度ベクトル</b>になる。',
         style: 'velocity',
         unit: 'm/s',
         scene: {
@@ -1032,7 +1056,7 @@ export const problems = {
           { when: 'fromOrigin', text: 'A からではない。<b>先端</b>から引く。' },
           { when: 'default', text: '先端どうしを結ぶ。' }
         ],
-        explanation: 'Δ<span class="vec">v</span> ＝ v aft − v bef。どれも (0, −2)。',
+        explanation: 'Δ<span class="vec">v</span> ＝ <span class="vec">v</span><sub>aft</sub> − <span class="vec">v</span><sub>bef</sub>。どれも (0, −2)。',
         hints: ['変位のときと同じ。先端から先端へ。'],
         reveal: {
           title: '3本とも同じ矢印',
@@ -1084,7 +1108,7 @@ export const problems = {
       {
         id: 'ext3-name',
         type: 'text-answer',
-        prompt: '<b>Δ<span class="vec">v</span> ÷ Δt</b>（1秒あたりの速度の変化）を表す量には名前がある。',
+        prompt: '<b>Δ<span class="vec">v</span> ÷ Δ<span class="sym">t</span></b>（1秒あたりの速度の変化）を表す量には名前がある。',
         question: '漢字三文字で入力しよう。',
         placeholder: '漢字三文字',
         scene: {
@@ -1112,13 +1136,13 @@ export const problems = {
           { text: '落下', feedback: '現象ではなく、量の名前。' }
         ],
         wrongText: '漢字三文字。「1秒あたりに速度がどれだけ変わるか」を表す量。',
-        correctText: '正解。Δ<span class="vec">v</span> ÷ Δt が <b>加速度</b>。',
-        explanation: 'v ＝ Δ<span class="vec">r</span> ÷ Δt と同じ形。位置の変化率が速度、速度の変化率が加速度。',
-        hints: ['v ＝ Δ<span class="vec">r</span> ÷ Δt だった。では a ＝ Δ<span class="vec">v</span> ÷ Δt の a は？'],
+        correctText: '正解。Δ<span class="vec">v</span> ÷ Δ<span class="sym">t</span> が <b>加速度</b>。',
+        explanation: '<span class="vec">v</span> ＝ Δ<span class="vec">r</span> ÷ Δ<span class="sym">t</span> と同じ形。位置の変化率が速度、速度の変化率が加速度。',
+        hints: ['<span class="vec">v</span> ＝ Δ<span class="vec">r</span> ÷ Δ<span class="sym">t</span> だった。では <span class="vec">a</span> ＝ Δ<span class="vec">v</span> ÷ Δ<span class="sym">t</span> の <span class="vec">a</span> は？'],
         reveal: {
           title: '同じ操作が、二度きいた',
-          body: '<ul><li>位置ベクトルの先端どうしを結ぶ → <b>変位</b>　÷Δt で <b>速度</b></li>'
-              + '<li>速度ベクトルの先端どうしを結ぶ → <b>速度の変化</b>　÷Δt で <b>加速度</b></li></ul>'
+          body: '<ul><li>位置ベクトルの先端どうしを結ぶ → <b>変位</b>　÷Δ<span class="sym">t</span> で <b>速度</b></li>'
+              + '<li>速度ベクトルの先端どうしを結ぶ → <b>速度の変化</b>　÷Δ<span class="sym">t</span> で <b>加速度</b></li></ul>'
               + '<p>やったことは「先端どうしを結ぶ」だけ。</p>'
               + '<p>そして加速度は、上りでも下りでも<b>ずっと真下に同じ大きさ</b>だった。'
               + '空気の抵抗を考えなければ、斜方投射の加速度は<b>運動の間じゅう変わらない</b>。'

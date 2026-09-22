@@ -114,7 +114,8 @@ export const ui = {
 
   /* ---------- 画面パーツ ---------- */
   setScale(text) {
-    this.el.scale.textContent = text || '';
+    // 記号（Δt など）を斜体で出したいので HTML で入れる
+    this.el.scale.innerHTML = text || '';
     this.el.scale.style.display = text ? '' : 'none';
   },
 

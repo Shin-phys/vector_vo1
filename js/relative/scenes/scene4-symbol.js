@@ -122,11 +122,11 @@ export default {
       tries++;
       const v = Number(input.value);
       const ok = Math.abs(v - q.answerValue) < 1e-6 && dir === q.answerDirection;
-      if (ok) settle(true, `${q.explain}　図の <b>v<sub>AB</sub></b> の矢印も、ちょうど1マス分です。`);
+      if (ok) settle(true, `${q.explain}　図の <b><span class="vec">v</span><sub>AB</sub></b> の矢印も、ちょうど1マス分です。`);
       else if (tries >= 3) settle(false, q.explain);
       else ui.feedback(Math.abs(v - q.answerValue) < 1e-6
         ? '大きさは合っています。向きをもう一度考えよう（引き算の符号は＋？−？）。'
-        : '式に当てはめてみよう。v<sub>AB</sub> ＝ v<sub>B</sub> − v<sub>A</sub> です。', 'wrong');
+        : '式に当てはめてみよう。<span class="vec">v</span><sub>AB</sub> ＝ <span class="vec">v</span><sub>B</sub> − <span class="vec">v</span><sub>A</sub> です。', 'wrong');
     };
 
     ui.actions([

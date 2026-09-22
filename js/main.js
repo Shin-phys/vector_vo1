@@ -696,6 +696,17 @@ function collectMagnets(item) {
 }
 
 /* --- choice：選択肢から選ぶ --- */
+/* --- note：問いではなく、途中に挟む短いガイド。図は任意。
+       「ここで一度立ち止まって考えてほしい」ところに置く。 --- */
+HANDLERS['note'] = (step, item, meta, done) => {
+  if (item.scene) buildScene(item.scene); else ui.showCanvas(!!item.showCanvas);
+  ui.feedback(item.body || '', item.tone || 'info');
+  ui.actions([{ label: item.button || '次へ', variant: 'primary', onClick: async () => {
+    if (item.reveal) await ui.modal({ title: item.reveal.title || '', body: item.reveal.body || '', actions: [{ label: 'わかった', variant: 'primary' }] });
+    done({ correct: true });
+  } }]);
+};
+
 HANDLERS['choice'] = (step, item, meta, done) => {
   if (item.scene) buildScene(item.scene); else ui.showCanvas(!!item.showCanvas);
   if (item.readouts && state.scene) ui.setReadout(readoutItems(state.scene, item, {}));

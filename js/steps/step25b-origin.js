@@ -10,12 +10,14 @@ export default {
     this._ctx = ctx;
     // 冒頭の区切り（problems.transition）は main.js が共通で出すので、ここでは出さない。
     await ctx.runItems();
+    // summary は 1つでも、配列で何枚か続けても書ける。
+    // ここでは「ポイント（変化を表すベクトルは移動できる）」→「🔒 のルール」の2枚。
     const sum = ctx.problems && ctx.problems.summary;
-    if (sum) {
+    for (const card of (Array.isArray(sum) ? sum : sum ? [sum] : [])) {
       await ctx.ui.modal({
-        title: sum.title || '',
-        body: sum.body || '',
-        actions: [{ label: sum.button || 'わかった', variant: 'primary' }]
+        title: card.title || '',
+        body: card.body || '',
+        actions: [{ label: card.button || 'わかった', variant: 'primary' }]
       });
     }
     await ctx.complete(true);

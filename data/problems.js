@@ -111,7 +111,6 @@ export const problems = {
           title: '同じ基準点から、2本',
           body: '<p>基準点を<b>学校</b>ひとつに決め、<b>学校→駅</b> と <b>学校→公園</b> の、'
               + '<b>始点が同じ2本の位置ベクトル</b>が揃った。</p>'
-              + '<p>次は、この<b>2本の先端どうし</b>。</p>'
         }
       }
     ]
@@ -836,8 +835,13 @@ export const problems = {
     title: '記号へ渡す',
     minutes: 4,
     scaleLabel: '1マス = 1 km',
-    prompt: '基準点 <b>O</b> は学校。<b>まず図を見て答え、あとから式で確かめる。</b>'
-          + '<br><span style="font-size:15px;color:#4b5563">式や記号をタップすると、図の矢印が光る。</span>',
+    transition: {
+      title: 'ここから、成分と式',
+      body: '<p>ここまでは<b>図</b>を中心に考えてきた。</p>'
+          + '<p>ここからは<b>成分（数字）</b>や<b>式</b>で Δ<span class="vec">r</span> を考えていこう。</p>',
+      button: 'わかった'
+    },
+    prompt: '基準点 <b>O</b> は学校。<b>まず図を見て答え、あとから式で確かめる。</b>',
     // 図は data の座標をそのまま使う（学校＝基準点 O）
     origin: { x: 3, y: 3, label: 'O' },
     places: [
